@@ -764,7 +764,7 @@ const hosts = SCENES.map((sc) => {
 }).join("\n");
 fs.writeFileSync(path.join(EP, "index.html"), `<!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><script src="assets/vendor/gsap.min.js"></script><title>The Deal at Plassey — ClearCut History pilot</title></head>
+<head><meta charset="utf-8"><link rel="icon" href="data:,"><script src="assets/vendor/gsap.min.js"></script><title>The Deal at Plassey — ClearCut History pilot</title></head>
 <body>
   <div id="root" data-composition-id="main" data-start="0" data-duration="${TOTAL}" data-width="1920" data-height="1080">
 ${hosts}
