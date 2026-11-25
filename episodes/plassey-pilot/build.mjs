@@ -696,7 +696,7 @@ scene("s11", {
 
 /* ------------------------------------------------------------ write compositions */
 const BASE_CSS = `
-#root{position:absolute;inset:0;overflow:hidden;background:${PAL.paper}}
+#root{position:absolute;inset:0;overflow:hidden;background:transparent}
 .stage,.cam{position:absolute;inset:0}
 .world{position:absolute;left:0;top:0}
 .world > svg.cc-set{position:absolute;left:0;top:0;width:2400px;height:1080px}
@@ -767,6 +767,7 @@ fs.writeFileSync(path.join(EP, "index.html"), `<!doctype html>
 <head><meta charset="utf-8"><link rel="icon" href="data:,"><script src="assets/vendor/gsap.min.js"></script><title>The Deal at Plassey — ClearCut History pilot</title></head>
 <body>
   <div id="root" data-composition-id="main" data-start="0" data-duration="${TOTAL}" data-width="1920" data-height="1080">
+    <div id="paper-bg" style="position:absolute;inset:0;background:${PAL.paper};z-index:0"></div>
 ${hosts}
     <div id="grade" data-composition-id="grade" data-composition-src="compositions/grade.html" data-start="0" data-duration="${TOTAL}" data-track-index="3" data-track-kind="graphics" data-width="1920" data-height="1080" style="z-index:50"></div>
     <audio id="mix" class="clip" src="assets/audio/mix.wav" data-start="0" data-duration="${TOTAL}" data-track-index="4" data-volume="1"></audio>
