@@ -603,7 +603,7 @@ scene("s09", {
       tl.fromTo("#s09-stat",{y:40,opacity:0},{y:0,opacity:1,duration:0.45,ease:"power3.out"},${V + P[2]});
       tl.set("#s09-num",{textContent:"?"},${V + P[2]});
       ${[...Array(12)].map((_, k) => `tl.set("#s09-num",{textContent:"${Math.round((22 * (k + 1)) / 12)}"},${(V + P[3] + k * 0.045).toFixed(2)});`).join("")}
-      tl.fromTo("#s09-sub",{opacity:0},{opacity:1,duration:0.35},${V + P[4] + 0.2});
+      tl.fromTo("#s09-sub",{opacity:0},{opacity:1,duration:0.3},${V + P[4] + 1.1});
       ${J.popIn("s09-trust", V + P[4] + 0.3)}
       tl.fromTo("#s09-stat",{rotation:0},{rotation:-1.2,duration:${S.dur - V - P[2]},ease:"sine.inOut",immediateRender:false},${V + P[2] + 0.45});
     `,
