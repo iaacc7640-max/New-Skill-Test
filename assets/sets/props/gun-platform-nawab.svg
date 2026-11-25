@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="cc-prop cc-gunstage" viewBox="-200 -170 400 190">
+  <g class="prop-barrel" data-pivot="10 -110"><path d="M-110,-124 L150,-116 L150,-96 L-110,-86 Z" fill="#6E5A3A" stroke="#2B2622" stroke-width="2"/><rect x="140" y="-122" width="16" height="32" fill="#4A3C26"/></g>
+  <rect x="-170" y="-84" width="340" height="40" fill="#8A5E3A" stroke="#2B2622" stroke-width="2"/>
+  <path d="M-170,-84 h340" stroke="#C9A24A" stroke-width="4"/>
+  <g fill="#5B3B25" stroke="#2B2622" stroke-width="2"><circle cx="-120" cy="-30" r="26"/><circle cx="0" cy="-30" r="26"/><circle cx="120" cy="-30" r="26"/></g>
+</svg>

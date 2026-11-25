@@ -1,0 +1,568 @@
+<template>
+<style>
+
+#root{position:absolute;inset:0;overflow:hidden;background:#E9DCC0}
+.stage,.cam{position:absolute;inset:0}
+.world{position:absolute;left:0;top:0}
+.world > svg.cc-set{position:absolute;left:0;top:0;width:2400px;height:1080px}
+.world > svg.cc-map{position:absolute;left:0;top:0;width:1920px;height:1080px}
+.cw{position:absolute}
+.cw-in{position:absolute;inset:0}
+.cw-in > svg{width:100%;height:100%;overflow:visible}
+.army{position:absolute;left:0;top:0;overflow:visible}
+.full{position:absolute;left:0;top:0;width:1920px;height:1080px}
+
+/* ClearCut History — on-screen text kit (1920x1080). Minimum text size 36px.
+   Positions are defaults; scenes may override left/top. No CSS transforms here:
+   GSAP owns transforms on these elements. */
+@font-face { font-family: "Bebas Neue"; src: url("assets/fonts/BebasNeue-400.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "CC Inter"; src: url("assets/fonts/inter-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "CC Inter"; src: url("assets/fonts/inter-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "CC Inter"; src: url("assets/fonts/inter-latin-900-normal.woff2") format("woff2"); font-weight: 900; }
+@font-face { font-family: "CC Garamond"; src: url("assets/fonts/eb-garamond-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "CC Garamond"; src: url("assets/fonts/eb-garamond-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "CC Garamond"; src: url("assets/fonts/eb-garamond-latin-400-italic.woff2") format("woff2"); font-style: italic; }
+
+#root { --paper:#E9DCC0; --ink:#2B2622; --red:#B8362E; --green:#4F7A3A; --saffron:#D9822B; --teal:#3F7F7A; --gold:#C9A24A; }
+
+/* Label chip, top left: PLACE, REGION · DD MONTH YYYY. Wipes in with clip-path. */
+.cc-chip { position:absolute; left:96px; top:76px; display:flex; align-items:center; gap:16px;
+  padding:14px 28px 10px 20px; background:var(--ink); color:var(--paper);
+  font:400 46px/1 "Bebas Neue", sans-serif; letter-spacing:2.5px; white-space:nowrap; }
+.cc-chip .cc-dot { width:16px; height:16px; background:var(--red); border-radius:2px; flex:none; }
+
+/* Name card, bottom left, first appearance of a person. */
+.cc-namecard { position:absolute; left:96px; bottom:104px; display:flex; align-items:stretch;
+  background:var(--paper); border:3px solid var(--ink); box-shadow:10px 10px 0 rgba(43,38,34,.28); }
+.cc-namecard .cc-year { background:var(--red); color:var(--paper); font:400 44px/1 "Bebas Neue", sans-serif;
+  letter-spacing:2px; padding:0 20px; display:flex; align-items:center; }
+.cc-namecard .cc-who { padding:14px 28px 14px 24px; }
+.cc-namecard .cc-name { font:400 70px/0.95 "Bebas Neue", sans-serif; letter-spacing:2px; color:var(--ink); white-space:nowrap; }
+.cc-namecard .cc-role { font:400 36px/1.15 "CC Inter", sans-serif; color:var(--ink); margin-top:4px; white-space:nowrap; }
+
+/* Stamp: rotated about -6deg (set by GSAP), drops with a thud. */
+.cc-stamp { position:absolute; padding:10px 36px 0; border:9px solid var(--red); outline:3px solid var(--red); outline-offset:6px;
+  color:var(--red); font:400 168px/1 "Bebas Neue", sans-serif; letter-spacing:10px; white-space:nowrap;
+  background:rgba(233,220,192,.55); mix-blend-mode:multiply; }
+
+/* Trust tags. */
+.cc-trust { position:absolute; display:inline-flex; align-items:center; gap:12px; padding:10px 20px 8px;
+  background:var(--saffron); color:var(--ink); border:3px solid var(--ink);
+  font:700 36px/1 "CC Inter", sans-serif; letter-spacing:1px; white-space:nowrap; }
+.cc-trust::before { content:""; width:14px; height:14px; border-radius:50%; background:var(--ink); }
+.cc-mapsimplified { position:absolute; right:72px; bottom:56px; padding:8px 16px 6px; background:rgba(43,38,34,.82);
+  color:var(--paper); font:400 38px/1 "Bebas Neue", sans-serif; letter-spacing:3px; }
+
+/* Versus card. */
+.cc-versus { position:absolute; display:flex; border:4px solid var(--ink); box-shadow:12px 12px 0 rgba(43,38,34,.3); }
+.cc-versus > div { padding:18px 40px 14px; text-align:center; }
+.cc-versus .cc-a { background:#9A2A23; color:#FFF8EC; }
+.cc-versus .cc-b { background:#3B5E2C; color:#FFF8EC; }
+.cc-versus .cc-side { font:400 48px/1 "Bebas Neue", sans-serif; letter-spacing:4px; }
+.cc-versus .cc-num { font:400 132px/0.95 "Bebas Neue", sans-serif; letter-spacing:2px; }
+.cc-versus .cc-bar { width:6px; background:var(--ink); padding:0; }
+
+/* Big number / stat card. */
+.cc-stat { position:absolute; background:var(--paper); border:4px solid var(--ink); padding:22px 40px 26px; box-shadow:12px 12px 0 rgba(43,38,34,.3); }
+.cc-stat .cc-label { font:400 50px/1 "Bebas Neue", sans-serif; letter-spacing:3px; color:var(--ink); }
+.cc-stat .cc-big { font:400 210px/0.9 "Bebas Neue", sans-serif; color:var(--red); }
+.cc-stat .cc-sub { font:400 38px/1.2 "CC Inter", sans-serif; color:var(--ink); }
+
+/* Title card and end card. */
+.cc-title { position:absolute; font:700 120px/1 "CC Garamond", serif; color:var(--ink); text-align:center; }
+.cc-kicker { position:absolute; font:400 52px/1 "Bebas Neue", sans-serif; letter-spacing:8px; color:var(--red); text-align:center; }
+.cc-endcard { position:absolute; inset:0; background:var(--ink); color:var(--paper); }
+.cc-endcard .cc-q { position:absolute; left:0; right:0; top:300px; text-align:center; font:700 96px/1.05 "CC Garamond", serif; }
+.cc-endcard .cc-brand { position:absolute; left:0; right:0; bottom:150px; text-align:center; font:400 64px/1 "Bebas Neue", sans-serif; letter-spacing:14px; color:var(--gold); }
+.cc-endcard .cc-cta { position:absolute; left:0; right:0; bottom:240px; text-align:center; font:400 40px/1 "CC Inter", sans-serif; }
+
+/* Grade layers (driven by the timeline, never CSS animation). */
+.cc-grade-tint { position:absolute; inset:0; background:rgba(214,160,90,.10); mix-blend-mode:multiply; }
+.cc-grade-vignette { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 55%, rgba(43,38,34,.55) 100%); }
+.cc-grade-grain { position:absolute; left:-256px; top:-256px; width:2432px; height:1592px;
+  background-image:url("assets/ui/grain.png"); background-size:512px 512px; opacity:.11; mix-blend-mode:overlay; }
+.cc-grade-paper { position:absolute; inset:0; background-image:url("assets/ui/paper.png"); background-size:1024px 1024px; opacity:.22; mix-blend-mode:multiply; }
+
+#s11-stage .panel{position:absolute;top:220px;width:840px;height:720px;border:4px solid #2B2622;background:#E2D2AE}
+      #s11-stage .plab2{position:absolute;top:950px;width:840px;text-align:center;font:400 56px/1 "Bebas Neue",sans-serif;letter-spacing:5px;color:#2B2622}
+      #s11-stage .army{position:absolute;left:0;top:0}
+</style>
+<div id="root" data-composition-id="s11" data-width="1920" data-height="1080" data-duration="9.639" data-layout-allow-overflow data-layout-allow-overlap>
+<div id="s11-stage" class="stage" style="background:#E9DCC0">
+      <div id="s11-q" data-layout-allow-occlusion class="cc-title" style="left:0;right:0;top:70px;font-size:96px">Who really won at Plassey?</div>
+      <div id="s11-pA" class="panel" style="left:80px"></div><div id="s11-pB" class="panel" style="left:1000px"></div>
+      <svg id="s11-a" class="army" viewBox="0 0 1920 1080" style="width:1920px;height:1080px;z-index:2">
+  <defs><symbol id="s11-a-sym" viewBox="-130 -350 260 360" overflow="visible">
+  <g class="rig-root" data-pivot="0 0">
+    <ellipse class="rig-shadow" cx="0" cy="0" rx="62" ry="9" fill="#2B2622" opacity="0.18"/>
+    
+    
+    <g class="rig-legL" data-pivot="-17 -118">
+      <path d="M-30,-122 L-4,-122 L-6,-40 L-28,-40 Z" fill="var(--trouser, #F6F0E2)" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      
+      <path d="M-30,-40 h22 q4,20 0,40 h-22 z" fill="#1E1A17" stroke="#2B2622" stroke-width="1.5" transform="translate(-4,0)"/>
+    </g>
+    <g class="rig-legR" data-pivot="17 -118">
+      <path d="M4,-122 L30,-122 L28,-40 L6,-40 Z" fill="var(--trouser, #F6F0E2)" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      
+      <path d="M4,-40 h26 q4,20 0,40 h-26 z" fill="#1E1A17" stroke="#2B2622" stroke-width="1.5" transform="translate(0,0)"/>
+    </g>
+    
+    <g class="rig-armL-upper" data-pivot="-40 -205">
+      
+      <path d="M-51,-210 L-29,-210 L-36,-156 L-56,-156 Z" fill="#B8362E" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      <g class="rig-armL-lower" data-pivot="-46 -158">
+        <path d="M-56,-162 L-36,-162 L-39,-120 L-57,-120 Z" fill="#B8362E" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+        <rect x="-58" y="-124" width="20" height="8" rx="2" fill="#F6F0E2" stroke="#2B2622" stroke-width="1.2"/>
+        <circle class="rig-handL" cx="-48" cy="-108" r="9" fill="var(--skin, #EBC6A0)" stroke="#2B2622" stroke-width="1.5"/>
+        
+      </g>
+    </g>
+    <g class="rig-torso" data-pivot="0 -112">
+    <path d="M-42,-210 L42,-210 L48,-112 L54,-76 L12,-76 L0,-118 L-12,-76 L-54,-76 L-48,-112 Z" fill="#B8362E" stroke="#2B2622" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M-14,-210 L14,-210 L12,-118 L-12,-118 Z" fill="#F6F0E2" stroke="#2B2622" stroke-width="1.2"/>
+    <path d="M-38,-208 L34,-122 M38,-208 L-34,-122" stroke="#F6F0E2" stroke-width="8"/>
+    <path d="M-38,-208 L34,-122 M38,-208 L-34,-122" stroke="#2B2622" stroke-width="1" opacity="0.4"/>
+    <circle cx="0" cy="-165" r="5" fill="#C9A24A"/></g>
+    <g class="rig-head" data-pivot="0 -214">
+      
+      <rect x="-11" y="-226" width="22" height="20" fill="var(--skin, #EBC6A0)" stroke="#2B2622" stroke-width="1.5"/>
+      
+      <ellipse cx="-43" cy="-260" rx="7" ry="10" fill="var(--skin, #EBC6A0)" stroke="#2B2622" stroke-width="1.5"/>
+      <ellipse cx="43" cy="-260" rx="7" ry="10" fill="var(--skin, #EBC6A0)" stroke="#2B2622" stroke-width="1.5"/>
+      <circle cx="0" cy="-262" r="44" fill="var(--skin, #EBC6A0)" stroke="#2B2622" stroke-width="2"/>
+      
+      
+    <g class="rig-face" data-pivot="0 -262">
+      
+      
+      <path d="M3,-258 q4,8 -1,11" fill="none" stroke="#2B2622" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+      <g class="rig-eyes" data-pivot="0 -266">
+        <circle cx="-10" cy="-266" r="4.6" fill="#2B2622"/>
+        <circle cx="20" cy="-266" r="4.6" fill="#2B2622"/>
+        <circle cx="-8.6" cy="-267.6" r="1.3" fill="#fff" opacity="0.8"/>
+        <circle cx="21.4" cy="-267.6" r="1.3" fill="#fff" opacity="0.8"/>
+      </g>
+      <g class="rig-brows" data-pivot="0 -280">
+        <path d="M-18,-279 q8,-5 15,-1" fill="none" stroke="#2B2622" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M13,-280 q8,-4 15,1" fill="none" stroke="#2B2622" stroke-width="3.2" stroke-linecap="round"/>
+      </g>
+      
+      <g class="rig-mouth" data-pivot="5 -240">
+        <path class="m0" d="M-3,-240 q8,4 16,0" fill="none" stroke="#2B2622" stroke-width="2" stroke-linecap="round"/>
+        <path class="m1" d="M-2,-241 q7,-3 14,0 q-7,9 -14,0z" fill="#5A2A24" stroke="#2B2622" stroke-width="1.5" opacity="0"/>
+        <path class="m2" d="M-5,-242 q10,-4 20,0 q-10,14 -20,0z" fill="#5A2A24" stroke="#2B2622" stroke-width="1.5" opacity="0"/>
+      </g>
+    </g>
+      <g class="rig-hat">
+    <g style="opacity: var(--hatA, 1)"><path d="M-58,-288 q58,-24 116,0 q-14,-36 -58,-38 q-44,2 -58,38z" fill="#1E1A17" stroke="#2B2622" stroke-width="2"/>
+    <path d="M-58,-288 q58,-24 116,0" fill="none" stroke="#F6F0E2" stroke-width="3"/></g>
+    <g style="opacity: var(--hatB, 0)"><path d="M-46,-276 q0,-44 46,-48 q46,4 46,48 q-46,-10 -92,0z" fill="#F6F0E2" stroke="#2B2622" stroke-width="2"/>
+    <path d="M-44,-286 q44,-14 88,0 M-36,-300 q36,-12 72,0" fill="none" stroke="#B8362E" stroke-width="3"/></g></g>
+    </g>
+    
+    <g class="rig-armR-upper" data-pivot="40 -205">
+      
+      <path d="M29,-210 L51,-210 L56,-156 L36,-156 Z" fill="#B8362E" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      <g class="rig-armR-lower" data-pivot="46 -158">
+        <path d="M36,-162 L56,-162 L57,-120 L39,-120 Z" fill="#B8362E" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+        <rect x="38" y="-124" width="20" height="8" rx="2" fill="#F6F0E2" stroke="#2B2622" stroke-width="1.2"/>
+        <circle class="rig-handR" cx="48" cy="-108" r="9" fill="var(--skin, #EBC6A0)" stroke="#2B2622" stroke-width="1.5"/>
+        <g class="rig-musket"><path d="M44,-100 L70,-330" stroke="#6B4A2E" stroke-width="7" stroke-linecap="round"/>
+    <path d="M66,-300 L72,-350" stroke="#8C8C88" stroke-width="3.5"/><path d="M42,-112 l10,-6" stroke="#4A3422" stroke-width="10" stroke-linecap="round"/></g>
+      </g>
+    </g>
+    
+  </g>
+</symbol></defs>
+  <use href="#s11-a-sym" class="s11-a-u" x="75.4" y="675.2" width="157.4" height="218.0" style="--skin:#DDB08A;--hatA:1;--hatB:0"/>
+  <use href="#s11-a-sym" class="s11-a-u" x="133.8" y="677.8" width="157.2" height="217.6" style="--skin:#A56F45;--hatA:0;--hatB:1"/>
+  <use href="#s11-a-sym" class="s11-a-u" x="179.3" y="672.6" width="160.6" height="222.4" style="--skin:#C08A5E;--hatA:0;--hatB:1"/>
+  <use href="#s11-a-sym" class="s11-a-u" x="239.7" y="664.1" width="164.6" height="227.8" style="--skin:#EBC6A0;--hatA:1;--hatB:0"/>
+  <use href="#s11-a-sym" class="s11-a-u" x="298.8" y="672.3" width="160.7" height="222.5" style="--skin:#C08A5E;--hatA:0;--hatB:1"/>
+  <use href="#s11-a-sym" class="s11-a-u" x="358.6" y="671.2" width="157.9" height="218.7" style="--skin:#A56F45;--hatA:0;--hatB:1"/></svg><svg id="s11-b" class="army" viewBox="0 0 1920 1080" style="width:1920px;height:1080px;z-index:2">
+  <defs><symbol id="s11-b-sym" viewBox="-130 -350 260 360" overflow="visible">
+  <g class="rig-root" data-pivot="0 0">
+    <ellipse class="rig-shadow" cx="0" cy="0" rx="62" ry="9" fill="#2B2622" opacity="0.18"/>
+    
+    
+    <g class="rig-legL" data-pivot="-17 -118">
+      <path d="M-30,-122 L-4,-122 L-6,-14 L-28,-14 Z" fill="#EDE6D6" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      
+      <path d="M-30,-14 h22 q4,7 0,14 h-22 z" fill="#6B3B22" stroke="#2B2622" stroke-width="1.5" transform="translate(-4,0)"/>
+    </g>
+    <g class="rig-legR" data-pivot="17 -118">
+      <path d="M4,-122 L30,-122 L28,-14 L6,-14 Z" fill="#EDE6D6" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      
+      <path d="M4,-14 h26 q4,7 0,14 h-26 z" fill="#6B3B22" stroke="#2B2622" stroke-width="1.5" transform="translate(0,0)"/>
+    </g>
+    
+    <g class="rig-armL-upper" data-pivot="-40 -205">
+      
+      <path d="M-51,-210 L-29,-210 L-36,-156 L-56,-156 Z" fill="var(--jama, #E4D3B0)" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      <g class="rig-armL-lower" data-pivot="-46 -158">
+        <path d="M-56,-162 L-36,-162 L-39,-120 L-57,-120 Z" fill="var(--jama, #E4D3B0)" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+        <rect x="-58" y="-124" width="20" height="8" rx="2" fill="#EDE6D6" stroke="#2B2622" stroke-width="1.2"/>
+        <circle class="rig-handL" cx="-48" cy="-108" r="9" fill="var(--skin, #A56F45)" stroke="#2B2622" stroke-width="1.5"/>
+        <g class="rig-shield"><circle cx="-56" cy="-120" r="30" fill="#5A4030" stroke="#2B2622" stroke-width="2"/>
+    <circle cx="-56" cy="-120" r="20" fill="none" stroke="#C9A24A" stroke-width="2.5"/>
+    <g fill="#C9A24A"><circle cx="-63" cy="-127" r="3"/><circle cx="-49" cy="-127" r="3"/><circle cx="-63" cy="-113" r="3"/><circle cx="-49" cy="-113" r="3"/></g></g>
+      </g>
+    </g>
+    <g class="rig-torso" data-pivot="0 -112">
+    <path d="M-40,-210 L40,-210 L46,-118 L64,-40 L-64,-40 L-46,-118 Z" fill="var(--jama, #E4D3B0)" stroke="#2B2622" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M-46,-126 h92 v14 h-92z" fill="var(--sash, #D9822B)" stroke="#2B2622" stroke-width="1.5"/>
+    <path d="M0,-210 L-22,-126" stroke="#2B2622" stroke-width="1.5" opacity="0.5"/></g>
+    <g class="rig-head" data-pivot="0 -214">
+      
+      <rect x="-11" y="-226" width="22" height="20" fill="var(--skin, #A56F45)" stroke="#2B2622" stroke-width="1.5"/>
+      
+      <ellipse cx="-43" cy="-260" rx="7" ry="10" fill="var(--skin, #A56F45)" stroke="#2B2622" stroke-width="1.5"/>
+      <ellipse cx="43" cy="-260" rx="7" ry="10" fill="var(--skin, #A56F45)" stroke="#2B2622" stroke-width="1.5"/>
+      <circle cx="0" cy="-262" r="44" fill="var(--skin, #A56F45)" stroke="#2B2622" stroke-width="2"/>
+      
+      
+    <g class="rig-face" data-pivot="0 -262">
+      
+      
+      <path d="M-7,-258 q4,8 -1,11" fill="none" stroke="#2B2622" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+      <g class="rig-eyes" data-pivot="0 -266">
+        <circle cx="-20" cy="-266" r="4.6" fill="#2B2622"/>
+        <circle cx="10" cy="-266" r="4.6" fill="#2B2622"/>
+        <circle cx="-18.6" cy="-267.6" r="1.3" fill="#fff" opacity="0.8"/>
+        <circle cx="11.4" cy="-267.6" r="1.3" fill="#fff" opacity="0.8"/>
+      </g>
+      <g class="rig-brows" data-pivot="0 -280">
+        <path d="M-28,-279 q8,-5 15,-1" fill="none" stroke="#2B2622" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M3,-280 q8,-4 15,1" fill="none" stroke="#2B2622" stroke-width="3.2" stroke-linecap="round"/>
+      </g>
+      <path d="M-19,-249 q10,-6 14,0 q4,-6 14,0" fill="none" stroke="#2B2622" stroke-width="3" stroke-linecap="round"/>
+      <g class="rig-mouth" data-pivot="-5 -240">
+        <path class="m0" d="M-13,-240 q8,4 16,0" fill="none" stroke="#2B2622" stroke-width="2" stroke-linecap="round"/>
+        <path class="m1" d="M-12,-241 q7,-3 14,0 q-7,9 -14,0z" fill="#5A2A24" stroke="#2B2622" stroke-width="1.5" opacity="0"/>
+        <path class="m2" d="M-15,-242 q10,-4 20,0 q-10,14 -20,0z" fill="#5A2A24" stroke="#2B2622" stroke-width="1.5" opacity="0"/>
+      </g>
+    </g>
+      <g class="rig-hat"><path d="M-48,-274 q0,-46 48,-50 q48,4 48,50 q-48,-12 -96,0z" fill="var(--turban, #D9822B)" stroke="#2B2622" stroke-width="2"/>
+    <path d="M-46,-284 q46,-14 92,0 M-38,-300 q38,-12 76,0" fill="none" stroke="#2B2622" stroke-width="1.5" opacity="0.35"/></g>
+    </g>
+    
+    <g class="rig-armR-upper" data-pivot="40 -205">
+      
+      <path d="M29,-210 L51,-210 L56,-156 L36,-156 Z" fill="var(--jama, #E4D3B0)" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      <g class="rig-armR-lower" data-pivot="46 -158">
+        <path d="M36,-162 L56,-162 L57,-120 L39,-120 Z" fill="var(--jama, #E4D3B0)" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+        <rect x="38" y="-124" width="20" height="8" rx="2" fill="#EDE6D6" stroke="#2B2622" stroke-width="1.2"/>
+        <circle class="rig-handR" cx="48" cy="-108" r="9" fill="var(--skin, #A56F45)" stroke="#2B2622" stroke-width="1.5"/>
+        <g class="rig-spear"><path d="M48,-60 L58,-360" stroke="#6B4A2E" stroke-width="6" stroke-linecap="round"/>
+    <path d="M58,-360 l-8,-4 l9,-30 l9,30z" fill="#9A9A94" stroke="#2B2622" stroke-width="1.5"/>
+    <path d="M55,-350 q-10,8 0,14" fill="none" stroke="#B8362E" stroke-width="4"/></g>
+      </g>
+    </g>
+    
+  </g>
+</symbol></defs>
+  <use href="#s11-b-sym" class="s11-b-u" x="453.2" y="678.2" width="156.5" height="216.7" style="--skin:#A56F45;--jama:#E4D3B0;--turban:#EDE6D6"/>
+  <use href="#s11-b-sym" class="s11-b-u" x="507.2" y="674.6" width="159.3" height="220.5" style="--skin:#C08A5E;--jama:#E4D3B0;--turban:#C9A24A"/>
+  <use href="#s11-b-sym" class="s11-b-u" x="576.3" y="675.9" width="154.2" height="213.6" style="--skin:#A56F45;--jama:#D8C29A;--turban:#EDE6D6"/>
+  <use href="#s11-b-sym" class="s11-b-u" x="624.6" y="677.6" width="156.8" height="217.2" style="--skin:#DDB08A;--jama:#D8C29A;--turban:#D9822B"/>
+  <use href="#s11-b-sym" class="s11-b-u" x="691.6" y="680.9" width="150.3" height="208.2" style="--skin:#7E5233;--jama:#D8C29A;--turban:#D9822B"/>
+  <use href="#s11-b-sym" class="s11-b-u" x="744.0" y="667.1" width="162.7" height="225.3" style="--skin:#7E5233;--jama:#EDE6D6;--turban:#B8362E"/></svg>
+      <div id="s11-jafar" class="cw " style="left:1257.8px;top:371.1px;width:404.4px;height:560px;z-index:3;">
+  <div class="cw-in" style=""><svg id="s11-jafar-svg" xmlns="http://www.w3.org/2000/svg" class="cc-char cc-mir-jafar" viewBox="-130 -350 260 360" data-character="mir-jafar">
+  <g class="rig-root" data-pivot="0 0">
+    <ellipse class="rig-shadow" cx="0" cy="0" rx="62" ry="9" fill="#2B2622" opacity="0.18"/>
+    
+    
+    <g class="rig-legL" data-pivot="-17 -118">
+      <path d="M-30,-122 L-4,-122 L-6,-14 L-28,-14 Z" fill="#EDE6D6" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      
+      <path d="M-30,-14 h22 q4,7 0,14 h-22 z" fill="#6B3B22" stroke="#2B2622" stroke-width="1.5" transform="translate(-4,0)"/>
+    </g>
+    <g class="rig-legR" data-pivot="17 -118">
+      <path d="M4,-122 L30,-122 L28,-14 L6,-14 Z" fill="#EDE6D6" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      
+      <path d="M4,-14 h26 q4,7 0,14 h-26 z" fill="#6B3B22" stroke="#2B2622" stroke-width="1.5" transform="translate(0,0)"/>
+    </g>
+    
+    <g class="rig-armL-upper" data-pivot="-40 -205">
+      
+      <path d="M-51,-210 L-29,-210 L-36,-156 L-56,-156 Z" fill="#4F7A3A" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      <g class="rig-armL-lower" data-pivot="-46 -158">
+        <path d="M-56,-162 L-36,-162 L-39,-120 L-57,-120 Z" fill="#4F7A3A" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+        <rect x="-58" y="-124" width="20" height="8" rx="2" fill="#EDE6D6" stroke="#2B2622" stroke-width="1.2"/>
+        <circle class="rig-handL" cx="-48" cy="-108" r="9" fill="#A56F45" stroke="#2B2622" stroke-width="1.5"/>
+        
+      </g>
+    </g>
+    <g class="rig-torso" data-pivot="0 -112">
+    <path d="M-44,-210 L44,-210 L50,-118 L72,-28 L-72,-28 L-50,-118 Z" fill="#4F7A3A" stroke="#2B2622" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M-50,-118 L50,-118 L72,-28 L-72,-28 Z" fill="#456B33" stroke="#2B2622" stroke-width="1.5"/>
+    <path d="M-50,-128 h100 v18 h-100z" fill="#B8362E" stroke="#2B2622" stroke-width="1.5"/>
+    <path d="M30,-110 l6,46 l-12,2z" fill="#B8362E" stroke="#2B2622" stroke-width="1"/>
+    <path d="M0,-210 L-26,-128" stroke="#2F4A22" stroke-width="3" fill="none"/>
+    <path d="M-40,-114 l-30,64" stroke="#7A6A55" stroke-width="6" stroke-linecap="round"/>
+    <path d="M-40,-118 l-6,8" stroke="#C9A24A" stroke-width="8" stroke-linecap="round"/></g>
+    <g class="rig-head" data-pivot="0 -214">
+      
+      <rect x="-11" y="-226" width="22" height="20" fill="#A56F45" stroke="#2B2622" stroke-width="1.5"/>
+      
+      <ellipse cx="-43" cy="-260" rx="7" ry="10" fill="#A56F45" stroke="#2B2622" stroke-width="1.5"/>
+      <ellipse cx="43" cy="-260" rx="7" ry="10" fill="#A56F45" stroke="#2B2622" stroke-width="1.5"/>
+      <circle cx="0" cy="-262" r="44" fill="#A56F45" stroke="#2B2622" stroke-width="2"/>
+      
+      
+    <g class="rig-face" data-pivot="0 -262">
+      <ellipse cx="-21" cy="-246" rx="7" ry="4.5" fill="#D9715A" opacity="0.22"/>
+      <ellipse cx="27" cy="-246" rx="7" ry="4.5" fill="#D9715A" opacity="0.22"/>
+      <path d="M-38,-262 q-2,40 18,58 q20,14 40,0 q20,-18 18,-58 q-6,18 -18,22 q-20,-10 -40,0 q-12,-4 -18,-22z" fill="#CFCBC2" stroke="#2B2622" stroke-width="1.5"/>
+      <path d="M1,-258 q4,8 -1,11" fill="none" stroke="#2B2622" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+      <g class="rig-eyes" data-pivot="0 -266">
+        <circle cx="-12" cy="-266" r="4.6" fill="#2B2622"/>
+        <circle cx="18" cy="-266" r="4.6" fill="#2B2622"/>
+        <circle cx="-10.6" cy="-267.6" r="1.3" fill="#fff" opacity="0.8"/>
+        <circle cx="19.4" cy="-267.6" r="1.3" fill="#fff" opacity="0.8"/>
+      </g>
+      <g class="rig-brows" data-pivot="0 -280">
+        <path d="M-20,-279 q8,-5 15,-1" fill="none" stroke="#8E8A82" stroke-width="4" stroke-linecap="round"/>
+        <path d="M11,-280 q8,-4 15,1" fill="none" stroke="#8E8A82" stroke-width="4" stroke-linecap="round"/>
+      </g>
+      <path d="M-14,-248 q14,-7 28,0" fill="none" stroke="#CFCBC2" stroke-width="5" stroke-linecap="round"/>
+      <g class="rig-mouth" data-pivot="3 -240">
+        <path class="m0" d="M-5,-240 q8,4 16,0" fill="none" stroke="#2B2622" stroke-width="2" stroke-linecap="round"/>
+        <path class="m1" d="M-4,-241 q7,-3 14,0 q-7,9 -14,0z" fill="#5A2A24" stroke="#2B2622" stroke-width="1.5" opacity="0"/>
+        <path class="m2" d="M-7,-242 q10,-4 20,0 q-10,14 -20,0z" fill="#5A2A24" stroke="#2B2622" stroke-width="1.5" opacity="0"/>
+      </g>
+    </g>
+      <g class="rig-hat">
+    <path d="M-50,-274 q0,-50 50,-54 q50,4 50,54 q-50,-12 -100,0z" fill="#F4F1EA" stroke="#2B2622" stroke-width="2"/>
+    <path d="M-48,-284 q48,-16 96,0 M-42,-300 q42,-14 84,0" fill="none" stroke="#B9B2A2" stroke-width="2.5"/>
+    <path d="M-50,-276 q50,-14 100,0" fill="none" stroke="#4F7A3A" stroke-width="5"/>
+    <circle cx="-10" cy="-300" r="6" fill="#4F7A3A" stroke="#C9A24A" stroke-width="2"/></g>
+    </g>
+    
+    <g class="rig-armR-upper" data-pivot="40 -205">
+      
+      <path d="M29,-210 L51,-210 L56,-156 L36,-156 Z" fill="#4F7A3A" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+      <g class="rig-armR-lower" data-pivot="46 -158">
+        <path d="M36,-162 L56,-162 L57,-120 L39,-120 Z" fill="#4F7A3A" stroke="#2B2622" stroke-width="1.5" stroke-linejoin="round"/>
+        <rect x="38" y="-124" width="20" height="8" rx="2" fill="#EDE6D6" stroke="#2B2622" stroke-width="1.2"/>
+        <circle class="rig-handR" cx="48" cy="-108" r="9" fill="#A56F45" stroke="#2B2622" stroke-width="1.5"/>
+        
+      </g>
+    </g>
+    
+  </g>
+</svg>
+</div></div>
+      <div id="s11-lA" data-layout-allow-occlusion class="plab2" style="left:80px">THE MEN WHO FOUGHT</div><div id="s11-lB" data-layout-allow-occlusion class="plab2" style="left:1000px">THE MAN WHO STOOD STILL</div>
+      <div id="s11-end" class="cc-endcard" style="z-index:20"><div class="cc-q" id="s11-eq">Tell us in the comments.</div><div class="cc-cta" id="s11-src">Sources are listed in the description</div><div class="cc-brand" id="s11-brand">CLEARCUT HISTORY</div>
+        <svg class="full" viewBox="0 0 1920 1080"><path id="s11-ul" d="M560,440 H1360" stroke="#B8362E" stroke-width="8"/></svg></div>
+    </div>
+</div>
+<script>
+/* ClearCut History — character rig motions for GSAP timelines (HyperFrames).
+ * Every motion is added to a paused timeline at an explicit time, with finite repeats,
+ * so any frame is a pure function of timeline time. Randomness is seeded.
+ * Usage: ClearCutRig.idle(tl, rootEl, t0, dur); rootEl = the character's <svg> element.
+ */
+(function () {
+  function rng(seed) {
+    let a = (seed >>> 0) || 1;
+    return function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const part = (root, name) => root && root.querySelector(".rig-" + name);
+  const pv = (el) => (el && el.getAttribute("data-pivot")) || "0 0";
+  function to(tl, el, vars, t) {
+    if (!el) return;
+    vars.svgOrigin = pv(el);
+    tl.to(el, vars, t);
+  }
+  function set(tl, el, vars, t) {
+    if (!el) return;
+    vars.svgOrigin = pv(el);
+    tl.set(el, vars, t);
+  }
+  const R = { rng };
+
+  /* Reset every rig part to rest at time t (call once at the start of a scene). */
+  R.rest = function (tl, root, t) {
+    root.querySelectorAll("[data-pivot]").forEach((el) => set(tl, el, { rotation: 0, scaleX: 1, scaleY: 1, x: 0, y: 0 }, t || 0));
+    ["m1", "m2"].forEach((m) => { const el = root.querySelector(".rig-mouth ." + m); if (el) tl.set(el, { opacity: 0 }, t || 0); });
+    const m0 = root.querySelector(".rig-mouth .m0"); if (m0) tl.set(m0, { opacity: 1 }, t || 0);
+  };
+
+  /* Idle: breathing 1-2% on the torso, head rides along, arms sway a little. */
+  R.idle = function (tl, root, t0, dur, opt) {
+    opt = opt || {};
+    const amp = opt.amp || 0.018, period = opt.period || 3.2;
+    const n = Math.max(1, Math.floor(dur / (period / 2)));
+    const torso = part(root, "torso"), head = part(root, "head");
+    if (torso) tl.fromTo(torso, { scaleY: 1, svgOrigin: pv(torso) }, { scaleY: 1 + amp, svgOrigin: pv(torso), duration: period / 2, ease: "sine.inOut", repeat: n - 1, yoyo: true }, t0);
+    if (head) tl.fromTo(head, { y: 0 }, { y: -amp * 110, duration: period / 2, ease: "sine.inOut", repeat: n - 1, yoyo: true }, t0);
+  };
+
+  /* Blink every 3-5 s. */
+  R.blink = function (tl, root, t0, dur, seed) {
+    const eyes = part(root, "eyes");
+    if (!eyes) return;
+    const r = rng(seed || 7);
+    let t = t0 + 0.5 + r() * 1.2;
+    while (t < t0 + dur - 0.25) {
+      tl.fromTo(eyes, { scaleY: 1, svgOrigin: pv(eyes) }, { scaleY: 0.08, svgOrigin: pv(eyes), duration: 0.06, ease: "none", immediateRender: false }, t);
+      to(tl, eyes, { scaleY: 1, duration: 0.09, ease: "none" }, t + 0.07);
+      t += 3 + r() * 2;
+    }
+  };
+
+  /* Talk: cycle 3 mouth shapes (closed, open, wide) on a seeded pattern. */
+  R.talk = function (tl, root, t0, dur, seed) {
+    const m = [0, 1, 2].map((i) => root.querySelector(".rig-mouth .m" + i));
+    if (!m[0]) return;
+    const r = rng(seed || 11);
+    let t = t0, prev = 0;
+    while (t < t0 + dur) {
+      let k = Math.floor(r() * 3);
+      if (k === prev) k = (k + 1) % 3;
+      m.forEach((el, i) => tl.set(el, { opacity: i === k ? 1 : 0 }, t));
+      prev = k;
+      t += 0.08 + r() * 0.07;
+    }
+    m.forEach((el, i) => tl.set(el, { opacity: i === 0 ? 1 : 0 }, t0 + dur));
+  };
+
+  /* Pose arms: rotations in degrees. side R = viewer's right arm. */
+  R.pose = function (tl, root, t, rot, dur, ease) {
+    Object.keys(rot).forEach((k) => to(tl, part(root, k), { rotation: rot[k], duration: dur || 0.4, ease: ease || "power2.inOut" }, t));
+  };
+  R.armsRest = function (tl, root, t, dur) {
+    R.pose(tl, root, t, { "armL-upper": 0, "armL-lower": 0, "armR-upper": 0, "armR-lower": 0 }, dur || 0.45);
+  };
+
+  /* Point: arm out toward the side, held, then back (hold 0 = keep). */
+  R.point = function (tl, root, t, side, hold) {
+    side = side || "R";
+    const s = side === "R" ? -1 : 1;
+    const p = {};
+    p["arm" + side + "-upper"] = 78 * s;
+    p["arm" + side + "-lower"] = 8 * s;
+    R.pose(tl, root, t, p, 0.35, "back.out(1.6)");
+    if (hold) {
+      const back = {};
+      back["arm" + side + "-upper"] = 0;
+      back["arm" + side + "-lower"] = 0;
+      R.pose(tl, root, t + 0.35 + hold, back, 0.45);
+    }
+  };
+
+  /* Gesture: forearm raised, open-hand beats, then rest. */
+  R.gesture = function (tl, root, t, side, dur) {
+    side = side || "R";
+    dur = dur || 1.6;
+    const s = side === "R" ? -1 : 1;
+    const up = part(root, "arm" + side + "-upper"), lo = part(root, "arm" + side + "-lower");
+    to(tl, up, { rotation: 28 * s, duration: 0.3, ease: "power2.out" }, t);
+    to(tl, lo, { rotation: 70 * s, duration: 0.3, ease: "power2.out" }, t);
+    const beats = Math.max(1, Math.floor((dur - 0.7) / 0.3));
+    for (let i = 0; i < beats; i++) to(tl, lo, { rotation: (i % 2 ? 70 : 52) * s, duration: 0.3, ease: "sine.inOut" }, t + 0.3 + i * 0.3);
+    to(tl, up, { rotation: 0, duration: 0.4, ease: "power2.inOut" }, t + dur - 0.4);
+    to(tl, lo, { rotation: 0, duration: 0.4, ease: "power2.inOut" }, t + dur - 0.4);
+  };
+
+  /* Walk cycle, 4 keys per stride: contact, down, passing, up. */
+  R.walk = function (tl, root, t0, dur, opt) {
+    opt = opt || {};
+    const step = opt.step || 0.45, amp = opt.amp || 22, arm = opt.arm == null ? 14 : opt.arm;
+    const L = part(root, "legL"), Rr = part(root, "legR"), aL = part(root, "armL-upper"), aR = part(root, "armR-upper"), body = part(root, "root");
+    const n = Math.max(1, Math.floor(dur / step));
+    for (let i = 0; i < n; i++) {
+      const t = t0 + i * step, sgn = i % 2 ? 1 : -1;
+      to(tl, L, { rotation: amp * sgn, duration: step, ease: "sine.inOut" }, t);
+      to(tl, Rr, { rotation: -amp * sgn, duration: step, ease: "sine.inOut" }, t);
+      if (arm) {
+        to(tl, aL, { rotation: -arm * sgn, duration: step, ease: "sine.inOut" }, t);
+        to(tl, aR, { rotation: arm * sgn, duration: step, ease: "sine.inOut" }, t);
+      }
+      if (body) {
+        tl.to(body, { y: -7, duration: step / 2, ease: "sine.out" }, t);
+        tl.to(body, { y: 0, duration: step / 2, ease: "sine.in" }, t + step / 2);
+      }
+    }
+    const te = t0 + n * step;
+    [L, Rr].forEach((el) => to(tl, el, { rotation: 0, duration: 0.25 }, te));
+    if (arm) [aL, aR].forEach((el) => to(tl, el, { rotation: 0, duration: 0.25 }, te));
+  };
+
+  /* Turn head: shift the face sideways (dx in SVG units) with a slight tilt. */
+  R.turnHead = function (tl, root, t, dx, dur) {
+    const face = part(root, "face"), head = part(root, "head");
+    if (face) tl.to(face, { x: dx, duration: dur || 0.35, ease: "power2.inOut" }, t);
+    to(tl, head, { rotation: dx * 0.12, duration: dur || 0.35, ease: "power2.inOut" }, t);
+  };
+
+  /* React: eyebrows up, eyes widen, then settle. */
+  R.react = function (tl, root, t, hold) {
+    const brows = part(root, "brows"), eyes = part(root, "eyes");
+    if (brows) tl.to(brows, { y: -8, duration: 0.15, ease: "back.out(3)" }, t);
+    to(tl, eyes, { scaleX: 1.18, scaleY: 1.18, duration: 0.15, ease: "back.out(3)" }, t);
+    if (hold != null) {
+      if (brows) tl.to(brows, { y: 0, duration: 0.3 }, t + 0.15 + hold);
+      to(tl, eyes, { scaleX: 1, scaleY: 1, duration: 0.3 }, t + 0.15 + hold);
+    }
+  };
+  /* Frown: brows down and in (suspicion). */
+  R.frown = function (tl, root, t, hold) {
+    const brows = part(root, "brows");
+    if (!brows) return;
+    tl.to(brows, { y: 5, duration: 0.2, ease: "power2.out" }, t);
+    if (hold != null) tl.to(brows, { y: 0, duration: 0.3 }, t + 0.2 + hold);
+  };
+
+  /* Crowd life for <use> soldiers: seeded bob and sway, finite repeats. */
+  R.crowd = function (tl, uses, t0, dur, opt) {
+    opt = opt || {};
+    const r = rng(opt.seed || 3);
+    const period = opt.period || 0.9, bob = opt.bob == null ? 6 : opt.bob, sway = opt.sway == null ? 2.5 : opt.sway;
+    uses.forEach((u) => {
+      const off = r() * period;
+      const n = Math.max(1, Math.floor((dur - off) / (period / 2)));
+      tl.fromTo(u, { y: 0, rotation: -sway * 0.5, transformOrigin: "50% 100%" }, { y: -bob, rotation: sway * 0.5, transformOrigin: "50% 100%", duration: period / 2, ease: "sine.inOut", repeat: n - 1, yoyo: true }, t0 + off);
+    });
+  };
+
+  window.ClearCutRig = R;
+})();
+
+(function(){
+  const R = window.ClearCutRig;
+  const tl = gsap.timeline({ paused: true });
+  
+      tl.fromTo("#s11-stage",{opacity:0},{opacity:1,duration:0.4,ease:"none"},0);
+      tl.fromTo("#s11-q",{y:-30,opacity:0},{y:0,opacity:1,duration:0.5,ease:"power3.out"},0.54);
+      R.crowd(tl, Array.from(document.querySelectorAll(".s11-a-u,.s11-b-u")), 0, 9.639, {seed:9,period:0.8,bob:5,sway:3});
+      const mj=document.querySelector("#s11-jafar-svg");
+      R.rest(tl,mj,0);
+      R.pose(tl,mj,0,{"armL-upper":-38,"armL-lower":-112,"armR-upper":38,"armR-lower":112},0.01);
+      R.idle(tl,mj,0,9.639,{period:4.0}); R.blink(tl,mj,0,9.639,111);
+      tl.fromTo(["#s11-pA","#s11-lA"],{opacity:0.45},{opacity:1,duration:0.3},2.3200000000000003);
+      tl.fromTo(["#s11-pB","#s11-lB"],{opacity:0.45},{opacity:1,duration:0.3},3.32);
+      tl.fromTo("#s11-a",{x:-30},{x:20,duration:9.639,ease:"none"},0);
+      tl.fromTo("#s11-b",{x:30},{x:-20,duration:9.639,ease:"none"},0);
+      R.turnHead(tl,mj,3.32,8,0.4); R.react(tl,mj,3.6199999999999997,1.0);
+      tl.fromTo("#s11-end",{yPercent:100},{yPercent:0,duration:0.55,ease:"power3.inOut"},4.7299999999999995);
+      tl.fromTo("#s11-eq",{opacity:0,y:20},{opacity:1,y:0,duration:0.5},5.18);
+      tl.fromTo("#s11-ul",{attr:{"stroke-dasharray":"800 800","stroke-dashoffset":800}},{attr:{"stroke-dashoffset":0},duration:1.6,ease:"power2.inOut"},5.4799999999999995);
+      tl.fromTo("#s11-brand",{scaleX:1.3,opacity:0},{scaleX:1,opacity:1,duration:2.4,ease:"power2.out"},5.38);
+      tl.fromTo("#s11-src",{opacity:0},{opacity:1,duration:0.5},6.279999999999999);
+      tl.fromTo("#s11-eq",{scale:1},{scale:1.04,duration:3,ease:"sine.inOut"},5.68);
+    
+  window.__timelines["s11"] = tl;
+})();
+</script>
+</template>

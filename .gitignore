@@ -1,0 +1,6 @@
+node_modules/
+episodes/*/assets/
+episodes/*/build/
+episodes/*/renders/
+episodes/*/out/
+.hyperframes/

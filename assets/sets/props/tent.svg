@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="cc-prop cc-tent" viewBox="-260 -300 520 310">
+  <path d="M-240,0 L0,-280 L240,0 Z" fill="#E8DCC0" stroke="#2B2622" stroke-width="3"/>
+  <path d="M0,-280 L-60,0 L60,0 Z" fill="#B8362E" stroke="#2B2622" stroke-width="2"/>
+  <path d="M0,-280 v-14" stroke="#2B2622" stroke-width="4"/><path d="M0,-294 l40,10 l-40,10z" fill="#B8362E"/>
+</svg>

@@ -1,0 +1,15 @@
+{
+  "paper": "#E9DCC0",
+  "paperDark": "#D8C7A2",
+  "ink": "#2B2622",
+  "companyRed": "#B8362E",
+  "mughalGreen": "#4F7A3A",
+  "marathaSaffron": "#D9822B",
+  "bengalTeal": "#3F7F7A",
+  "sea": "#5E8C8A",
+  "sky": "#CFE0D6",
+  "gold": "#C9A24A",
+  "white": "#F6F0E2",
+  "skin": { "light": "#EBC6A0", "fair": "#DDB08A", "medium": "#C08A5E", "brown": "#A56F45", "deep": "#7E5233" },
+  "grade": { "warmTint": "rgba(214,160,90,0.10)", "vignette": "rgba(43,38,34,0.55)", "grainOpacity": 0.10, "tragedyGrey": "#9A9388" }
+}

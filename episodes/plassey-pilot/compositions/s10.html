@@ -1,0 +1,314 @@
+<template>
+<style>
+
+#root{position:absolute;inset:0;overflow:hidden;background:#E9DCC0}
+.stage,.cam{position:absolute;inset:0}
+.world{position:absolute;left:0;top:0}
+.world > svg.cc-set{position:absolute;left:0;top:0;width:2400px;height:1080px}
+.world > svg.cc-map{position:absolute;left:0;top:0;width:1920px;height:1080px}
+.cw{position:absolute}
+.cw-in{position:absolute;inset:0}
+.cw-in > svg{width:100%;height:100%;overflow:visible}
+.army{position:absolute;left:0;top:0;overflow:visible}
+.full{position:absolute;left:0;top:0;width:1920px;height:1080px}
+
+/* ClearCut History — on-screen text kit (1920x1080). Minimum text size 36px.
+   Positions are defaults; scenes may override left/top. No CSS transforms here:
+   GSAP owns transforms on these elements. */
+@font-face { font-family: "Bebas Neue"; src: url("assets/fonts/BebasNeue-400.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "CC Inter"; src: url("assets/fonts/inter-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "CC Inter"; src: url("assets/fonts/inter-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "CC Inter"; src: url("assets/fonts/inter-latin-900-normal.woff2") format("woff2"); font-weight: 900; }
+@font-face { font-family: "CC Garamond"; src: url("assets/fonts/eb-garamond-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "CC Garamond"; src: url("assets/fonts/eb-garamond-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "CC Garamond"; src: url("assets/fonts/eb-garamond-latin-400-italic.woff2") format("woff2"); font-style: italic; }
+
+#root { --paper:#E9DCC0; --ink:#2B2622; --red:#B8362E; --green:#4F7A3A; --saffron:#D9822B; --teal:#3F7F7A; --gold:#C9A24A; }
+
+/* Label chip, top left: PLACE, REGION · DD MONTH YYYY. Wipes in with clip-path. */
+.cc-chip { position:absolute; left:96px; top:76px; display:flex; align-items:center; gap:16px;
+  padding:14px 28px 10px 20px; background:var(--ink); color:var(--paper);
+  font:400 46px/1 "Bebas Neue", sans-serif; letter-spacing:2.5px; white-space:nowrap; }
+.cc-chip .cc-dot { width:16px; height:16px; background:var(--red); border-radius:2px; flex:none; }
+
+/* Name card, bottom left, first appearance of a person. */
+.cc-namecard { position:absolute; left:96px; bottom:104px; display:flex; align-items:stretch;
+  background:var(--paper); border:3px solid var(--ink); box-shadow:10px 10px 0 rgba(43,38,34,.28); }
+.cc-namecard .cc-year { background:var(--red); color:var(--paper); font:400 44px/1 "Bebas Neue", sans-serif;
+  letter-spacing:2px; padding:0 20px; display:flex; align-items:center; }
+.cc-namecard .cc-who { padding:14px 28px 14px 24px; }
+.cc-namecard .cc-name { font:400 70px/0.95 "Bebas Neue", sans-serif; letter-spacing:2px; color:var(--ink); white-space:nowrap; }
+.cc-namecard .cc-role { font:400 36px/1.15 "CC Inter", sans-serif; color:var(--ink); margin-top:4px; white-space:nowrap; }
+
+/* Stamp: rotated about -6deg (set by GSAP), drops with a thud. */
+.cc-stamp { position:absolute; padding:10px 36px 0; border:9px solid var(--red); outline:3px solid var(--red); outline-offset:6px;
+  color:var(--red); font:400 168px/1 "Bebas Neue", sans-serif; letter-spacing:10px; white-space:nowrap;
+  background:rgba(233,220,192,.55); mix-blend-mode:multiply; }
+
+/* Trust tags. */
+.cc-trust { position:absolute; display:inline-flex; align-items:center; gap:12px; padding:10px 20px 8px;
+  background:var(--saffron); color:var(--ink); border:3px solid var(--ink);
+  font:700 36px/1 "CC Inter", sans-serif; letter-spacing:1px; white-space:nowrap; }
+.cc-trust::before { content:""; width:14px; height:14px; border-radius:50%; background:var(--ink); }
+.cc-mapsimplified { position:absolute; right:72px; bottom:56px; padding:8px 16px 6px; background:rgba(43,38,34,.82);
+  color:var(--paper); font:400 38px/1 "Bebas Neue", sans-serif; letter-spacing:3px; }
+
+/* Versus card. */
+.cc-versus { position:absolute; display:flex; border:4px solid var(--ink); box-shadow:12px 12px 0 rgba(43,38,34,.3); }
+.cc-versus > div { padding:18px 40px 14px; text-align:center; }
+.cc-versus .cc-a { background:#9A2A23; color:#FFF8EC; }
+.cc-versus .cc-b { background:#3B5E2C; color:#FFF8EC; }
+.cc-versus .cc-side { font:400 48px/1 "Bebas Neue", sans-serif; letter-spacing:4px; }
+.cc-versus .cc-num { font:400 132px/0.95 "Bebas Neue", sans-serif; letter-spacing:2px; }
+.cc-versus .cc-bar { width:6px; background:var(--ink); padding:0; }
+
+/* Big number / stat card. */
+.cc-stat { position:absolute; background:var(--paper); border:4px solid var(--ink); padding:22px 40px 26px; box-shadow:12px 12px 0 rgba(43,38,34,.3); }
+.cc-stat .cc-label { font:400 50px/1 "Bebas Neue", sans-serif; letter-spacing:3px; color:var(--ink); }
+.cc-stat .cc-big { font:400 210px/0.9 "Bebas Neue", sans-serif; color:var(--red); }
+.cc-stat .cc-sub { font:400 38px/1.2 "CC Inter", sans-serif; color:var(--ink); }
+
+/* Title card and end card. */
+.cc-title { position:absolute; font:700 120px/1 "CC Garamond", serif; color:var(--ink); text-align:center; }
+.cc-kicker { position:absolute; font:400 52px/1 "Bebas Neue", sans-serif; letter-spacing:8px; color:var(--red); text-align:center; }
+.cc-endcard { position:absolute; inset:0; background:var(--ink); color:var(--paper); }
+.cc-endcard .cc-q { position:absolute; left:0; right:0; top:300px; text-align:center; font:700 96px/1.05 "CC Garamond", serif; }
+.cc-endcard .cc-brand { position:absolute; left:0; right:0; bottom:150px; text-align:center; font:400 64px/1 "Bebas Neue", sans-serif; letter-spacing:14px; color:var(--gold); }
+.cc-endcard .cc-cta { position:absolute; left:0; right:0; bottom:240px; text-align:center; font:400 40px/1 "CC Inter", sans-serif; }
+
+/* Grade layers (driven by the timeline, never CSS animation). */
+.cc-grade-tint { position:absolute; inset:0; background:rgba(214,160,90,.10); mix-blend-mode:multiply; }
+.cc-grade-vignette { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 55%, rgba(43,38,34,.55) 100%); }
+.cc-grade-grain { position:absolute; left:-256px; top:-256px; width:2432px; height:1592px;
+  background-image:url("assets/ui/grain.png"); background-size:512px 512px; opacity:.11; mix-blend-mode:overlay; }
+.cc-grade-paper { position:absolute; inset:0; background-image:url("assets/ui/paper.png"); background-size:1024px 1024px; opacity:.22; mix-blend-mode:multiply; }
+
+#s10-world{height:1080px} #s10-stage .pin{position:absolute;width:26px;height:26px;border-radius:50%;background:#2B2622;border:4px solid #E9DCC0;z-index:3}
+      #s10-stage .plab{position:absolute;font:700 38px/1 "CC Inter",sans-serif;color:#2B2622;white-space:nowrap;z-index:3;text-shadow:0 0 6px #E9DCC0,0 0 12px #E9DCC0}
+      #s10-stage .rlab{position:absolute;width:400px;text-align:center;font:400 64px/1 "Bebas Neue",sans-serif;letter-spacing:6px;color:#2B2622;opacity:.85}
+</style>
+<div id="root" data-composition-id="s10" data-width="1920" data-height="1080" data-duration="9.455" data-layout-allow-overflow data-layout-allow-overlap>
+<div id="s10-stage" class="stage" style="background:#5E8C8A"><div id="s10-cam" class="cam"><div id="s10-world" class="world" style="width:1920px"><svg id="s10-map" xmlns="http://www.w3.org/2000/svg" class="cc-map cc-map-bengal" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <rect class="map-sea" x="-200" y="-200" width="2320" height="1480" fill="#5E8C8A"/>
+  <g class="map-sea-lines" stroke="#77A3A0" stroke-width="2" fill="none" opacity="0.6">
+    <path d="M300,760 q30,-12 60,0 t60,0"/><path d="M390,820 q30,-12 60,0 t60,0"/><path d="M480,880 q30,-12 60,0 t60,0"/><path d="M570,760 q30,-12 60,0 t60,0"/><path d="M660,820 q30,-12 60,0 t60,0"/><path d="M750,880 q30,-12 60,0 t60,0"/><path d="M840,760 q30,-12 60,0 t60,0"/><path d="M930,820 q30,-12 60,0 t60,0"/><path d="M1020,880 q30,-12 60,0 t60,0"/>
+  </g>
+  <path class="map-land" d="M1517.9,1140L1513.2,1130.5L1507.3,1094.5L1492.3,1065.3L1491,1055.5L1483.8,1043.7L1490.7,1042.9L1476.6,1032.5L1474.7,1028.2L1471.7,1003.9L1472.4,990.4L1470.4,992.2L1468.5,1000.5L1462.9,1004L1465.2,1018.5L1464.9,1022L1461.9,1027.5L1450.2,1021.7L1441.7,1015.4L1431.9,999.9L1422.4,982.5L1425.7,979.8L1429.9,979.5L1443.6,992.4L1452.4,995L1458,991.9L1464.9,986.4L1468.1,975.7L1464.5,971.7L1458,969.5L1453.7,966.6L1447.2,959.5L1446.6,955.6L1444.6,950.9L1438.1,947.6L1432.8,943.4L1437.4,935.9L1441.7,930.2L1430.2,930.5L1417.5,920.8L1414.5,918.1L1410.3,916.1L1400.2,914.9L1391.7,917.7L1395.6,931.5L1394.9,936L1389.4,935.3L1377.6,914.6L1381.2,909.2L1386.1,904.2L1383.8,903.5L1378.9,903.8L1383.5,885.2L1380.6,882.5L1379.3,888.2L1376.6,893.9L1366.8,907L1361.9,904.5L1358.7,901.3L1363.2,894.4L1365.9,892.6L1367.5,888.9L1363.9,881.6L1358,876.3L1353.4,867.4L1351.2,867.2L1353.1,877.8L1352.5,893.1L1342,876.3L1321.1,852.2L1316.2,845.1L1314.6,845.1L1309.3,836.2L1304.4,826.4L1291.7,807.8L1287.8,774.5L1287.4,758.1L1278.9,738.7L1273.1,711.9L1270.8,704.9L1273.7,696.2L1274.4,693L1272.7,693.7L1268.2,698.1L1262.6,687.4L1259,677.8L1244,657.8L1239.7,649L1239.4,640.4L1233.2,649L1224.4,655.1L1215.6,664.3L1209.7,667.1L1191.1,668.8L1180.3,656.5L1164.9,626.5L1162.6,619.7L1164.6,602L1161,585.4L1161,576.5L1160,570.6L1157.4,572L1156.1,575.9L1156.8,582.1L1155.8,587.5L1142.4,586.4L1129.6,584L1140.7,592.8L1152.5,594.8L1158.7,602.7L1159.7,608.9L1159.4,615.8L1153.2,620.7L1147.6,623.6L1148.6,630.3L1155.4,638.4L1147,640.7L1145,646L1144.7,653.4L1148.9,660.1L1150.5,665L1149.6,669.4L1153.5,674.4L1159.4,684.6L1161,691.8L1158.7,702L1155.4,705.9L1150.2,709.8L1137.5,722.6L1131.3,737.2L1126,744L1119.5,745.2L1117.2,742.1L1111.7,738.4L1111.7,731.3L1113.3,725.6L1124.1,711.9L1118.2,713.7L1111.3,717.7L1101.2,725L1097.6,716L1095.7,707.4L1095.7,697.1L1103.8,681.6L1094.3,689.2L1091.7,698.9L1093,710.3L1091.7,718.3L1088.1,728.9L1083.2,735.2L1075.1,739.2L1071.5,745.5L1065.9,750.1L1065.9,740.9L1064.3,728.9L1058.4,700.3L1057.1,706.4L1060,724.1L1060,735.7L1055.5,744.8L1046.6,754.5L1039.8,755.9L1035.9,754.5L1029.7,748.4L1023.1,739.7L1021.8,725.8L1019.2,718.2L1016.9,733.5L1009.7,733.3L1016.3,743.5L1018.2,750.9L1019.2,761.1L1011.4,762.3L1006.1,761.1L1001.6,752.3L999.3,760.4L991.4,767.9L988.5,764.2L986.9,760.3L986.5,753.3L990.8,726.7L990.1,723.8L987.8,721.7L983.6,720.7L982,715.3L975.1,743.6L978,755.2L976.7,760.6L964.3,765L951.6,754.3L949.9,750.9L949,756.9L946.7,764.2L934.9,762.8L928.7,757.2L932.6,747.4L940.1,724.1L941.4,713.6L931.6,705.9L923.1,701.3L918.2,690.6L920.2,702.3L924.8,706.4L931.3,709.3L938.2,715.3L933.3,722.6L928.4,727.2L918.9,744.3L907.8,754L894.4,761.1L851.3,771.8L842.1,776L828.7,789.2L820.2,801.7L818.6,814.4L823.5,828.1L827.4,849.5L830.7,853.9L826.1,861.8L817.9,870L811.4,881.1L812.1,887.4L810.4,891.4L787.5,905.2L782.6,913.1L776.4,921.1L768.9,916.6L764.4,916.6L770.6,922.9L769.6,927.1L767.6,929.5L761.7,931.8L728.7,941.9L703.6,951.4L696.4,950.9L697.7,948.1L702.3,945.6L701.9,934.5L697,932.5L693.1,931.8L673.8,945.1L666.3,958.3L668,960.8L672.2,960.1L685,952.8L691.2,954.8L691.5,957.8L671.9,969.1L630.7,1005.9L628.8,1013.2L623.2,1021.4L616,1029L602.6,1047.7L577.1,1075.4L570.3,1085.7L529.4,1107L521.9,1113.4L505.3,1134.1L499.2,1140L-60,1140L-60,-60L1980,-60L1980,1140ZM1440,1048.3L1438.7,1049.2L1429.2,1041L1421.7,1030.7L1433.5,1028.7L1444.9,1030.9L1445.3,1036.4L1442.6,1045.2ZM1422.1,932.2L1424,945.4L1417.8,940.4L1415.5,933.5L1414.9,926.5ZM1378.3,929L1379.6,938.2L1375.3,934.5L1369.5,921.8L1369.8,913.4L1373.7,917.2ZM1442.3,964.3L1452.8,972.3L1457,971.8L1463.2,976.8L1463.6,978.8L1462.2,982.8L1459.3,986L1451.5,989.4L1446.2,986.7L1443.9,978L1437.7,973.8L1435.8,970.5L1440,965.6ZM1275.4,743.6L1272.1,751.6L1270.5,745.9L1271.8,738.6L1273.1,734.5L1274,734.5L1276,738.7ZM1282.2,775.4L1276.7,775.9L1274,773L1275.4,768.9L1273.7,755.7L1278.3,754.3L1280.6,754.5L1282.2,758.2L1283.2,765.4ZM1209.7,710.2L1199.9,717L1203.1,676.3L1210.3,691.4L1212.3,699.6ZM1246.6,689.7L1242.4,692.6L1238.4,690.3L1233.2,680.7L1235.8,668.6L1237.5,666.7L1239.7,670.6L1243.3,679.2L1245.6,685.6ZM1163.6,632.7L1164.9,637L1160,634.4L1156.1,631.5L1153.8,627.6L1157.7,625.5ZM1175.7,718.5L1160,721.9L1151.9,720.9L1166.9,695.2L1166.6,683.6L1164.3,674.2L1156.4,666.7L1156.1,661.3L1152.5,653.9L1150.9,645.2L1159.4,642.5L1166.2,647.4L1167.2,650.2L1168.5,657.3L1172.1,664.7L1183.9,679.7L1183.9,689.1L1180.6,711.5Z" fill="#E9DCC0"/>
+  <path class="map-region" d="M497.1,197.8 Q497.1,197.8 551.5,192.7 Q606,187.5 674.1,223.2 Q742.2,258.9 810.3,269.0 Q878.3,279.2 910.0,258.9 Q941.8,238.5 978.1,253.8 Q1014.5,269 1055.3,284.2 Q1096.1,299.4 1141.5,319.6 Q1186.9,339.9 1232.3,390.1 Q1277.6,440.3 1300.3,475.3 Q1323,510.2 1318.5,579.5 Q1314,648.7 1309.5,727.0 Q1304.9,805.4 1227.8,834.5 Q1150.6,863.7 1059.8,863.7 Q969.1,863.7 910.1,849.1 Q851.1,834.5 819.4,805.3 Q787.6,776.1 764.9,727.2 Q742.2,678.2 696.8,643.8 Q651.4,609.3 606.0,569.7 Q560.7,530.1 528.9,505.2 Q497.1,480.3 497.1,440.3 Q497.1,400.3 519.8,355.0 Q542.5,309.6 519.8,253.7 L497.1,197.8 Z" fill="#3F7F7A" opacity="0.55" stroke="#2B2622" stroke-width="3" stroke-dasharray="10 8"/><defs><clipPath id="s10-clip"><circle id="s10-clipc" cx="956.4" cy="671.4" r="0"/></clipPath></defs><path id="s10-red" d="M497.1,197.8 Q497.1,197.8 551.5,192.7 Q606,187.5 674.1,223.2 Q742.2,258.9 810.3,269.0 Q878.3,279.2 910.0,258.9 Q941.8,238.5 978.1,253.8 Q1014.5,269 1055.3,284.2 Q1096.1,299.4 1141.5,319.6 Q1186.9,339.9 1232.3,390.1 Q1277.6,440.3 1300.3,475.3 Q1323,510.2 1318.5,579.5 Q1314,648.7 1309.5,727.0 Q1304.9,805.4 1227.8,834.5 Q1150.6,863.7 1059.8,863.7 Q969.1,863.7 910.1,849.1 Q851.1,834.5 819.4,805.3 Q787.6,776.1 764.9,727.2 Q742.2,678.2 696.8,643.8 Q651.4,609.3 606.0,569.7 Q560.7,530.1 528.9,505.2 Q497.1,480.3 497.1,440.3 Q497.1,400.3 519.8,355.0 Q542.5,309.6 519.8,253.7 L497.1,197.8 Z" fill="#B8362E" opacity="0.85" clip-path="url(#s10-clip)"/>
+  <path class="map-seamask" d="M-200,-200 H2120 V1280 H-200 Z M1517.9,1140L1513.2,1130.5L1507.3,1094.5L1492.3,1065.3L1491,1055.5L1483.8,1043.7L1490.7,1042.9L1476.6,1032.5L1474.7,1028.2L1471.7,1003.9L1472.4,990.4L1470.4,992.2L1468.5,1000.5L1462.9,1004L1465.2,1018.5L1464.9,1022L1461.9,1027.5L1450.2,1021.7L1441.7,1015.4L1431.9,999.9L1422.4,982.5L1425.7,979.8L1429.9,979.5L1443.6,992.4L1452.4,995L1458,991.9L1464.9,986.4L1468.1,975.7L1464.5,971.7L1458,969.5L1453.7,966.6L1447.2,959.5L1446.6,955.6L1444.6,950.9L1438.1,947.6L1432.8,943.4L1437.4,935.9L1441.7,930.2L1430.2,930.5L1417.5,920.8L1414.5,918.1L1410.3,916.1L1400.2,914.9L1391.7,917.7L1395.6,931.5L1394.9,936L1389.4,935.3L1377.6,914.6L1381.2,909.2L1386.1,904.2L1383.8,903.5L1378.9,903.8L1383.5,885.2L1380.6,882.5L1379.3,888.2L1376.6,893.9L1366.8,907L1361.9,904.5L1358.7,901.3L1363.2,894.4L1365.9,892.6L1367.5,888.9L1363.9,881.6L1358,876.3L1353.4,867.4L1351.2,867.2L1353.1,877.8L1352.5,893.1L1342,876.3L1321.1,852.2L1316.2,845.1L1314.6,845.1L1309.3,836.2L1304.4,826.4L1291.7,807.8L1287.8,774.5L1287.4,758.1L1278.9,738.7L1273.1,711.9L1270.8,704.9L1273.7,696.2L1274.4,693L1272.7,693.7L1268.2,698.1L1262.6,687.4L1259,677.8L1244,657.8L1239.7,649L1239.4,640.4L1233.2,649L1224.4,655.1L1215.6,664.3L1209.7,667.1L1191.1,668.8L1180.3,656.5L1164.9,626.5L1162.6,619.7L1164.6,602L1161,585.4L1161,576.5L1160,570.6L1157.4,572L1156.1,575.9L1156.8,582.1L1155.8,587.5L1142.4,586.4L1129.6,584L1140.7,592.8L1152.5,594.8L1158.7,602.7L1159.7,608.9L1159.4,615.8L1153.2,620.7L1147.6,623.6L1148.6,630.3L1155.4,638.4L1147,640.7L1145,646L1144.7,653.4L1148.9,660.1L1150.5,665L1149.6,669.4L1153.5,674.4L1159.4,684.6L1161,691.8L1158.7,702L1155.4,705.9L1150.2,709.8L1137.5,722.6L1131.3,737.2L1126,744L1119.5,745.2L1117.2,742.1L1111.7,738.4L1111.7,731.3L1113.3,725.6L1124.1,711.9L1118.2,713.7L1111.3,717.7L1101.2,725L1097.6,716L1095.7,707.4L1095.7,697.1L1103.8,681.6L1094.3,689.2L1091.7,698.9L1093,710.3L1091.7,718.3L1088.1,728.9L1083.2,735.2L1075.1,739.2L1071.5,745.5L1065.9,750.1L1065.9,740.9L1064.3,728.9L1058.4,700.3L1057.1,706.4L1060,724.1L1060,735.7L1055.5,744.8L1046.6,754.5L1039.8,755.9L1035.9,754.5L1029.7,748.4L1023.1,739.7L1021.8,725.8L1019.2,718.2L1016.9,733.5L1009.7,733.3L1016.3,743.5L1018.2,750.9L1019.2,761.1L1011.4,762.3L1006.1,761.1L1001.6,752.3L999.3,760.4L991.4,767.9L988.5,764.2L986.9,760.3L986.5,753.3L990.8,726.7L990.1,723.8L987.8,721.7L983.6,720.7L982,715.3L975.1,743.6L978,755.2L976.7,760.6L964.3,765L951.6,754.3L949.9,750.9L949,756.9L946.7,764.2L934.9,762.8L928.7,757.2L932.6,747.4L940.1,724.1L941.4,713.6L931.6,705.9L923.1,701.3L918.2,690.6L920.2,702.3L924.8,706.4L931.3,709.3L938.2,715.3L933.3,722.6L928.4,727.2L918.9,744.3L907.8,754L894.4,761.1L851.3,771.8L842.1,776L828.7,789.2L820.2,801.7L818.6,814.4L823.5,828.1L827.4,849.5L830.7,853.9L826.1,861.8L817.9,870L811.4,881.1L812.1,887.4L810.4,891.4L787.5,905.2L782.6,913.1L776.4,921.1L768.9,916.6L764.4,916.6L770.6,922.9L769.6,927.1L767.6,929.5L761.7,931.8L728.7,941.9L703.6,951.4L696.4,950.9L697.7,948.1L702.3,945.6L701.9,934.5L697,932.5L693.1,931.8L673.8,945.1L666.3,958.3L668,960.8L672.2,960.1L685,952.8L691.2,954.8L691.5,957.8L671.9,969.1L630.7,1005.9L628.8,1013.2L623.2,1021.4L616,1029L602.6,1047.7L577.1,1075.4L570.3,1085.7L529.4,1107L521.9,1113.4L505.3,1134.1L499.2,1140L-60,1140L-60,-60L1980,-60L1980,1140ZM1440,1048.3L1438.7,1049.2L1429.2,1041L1421.7,1030.7L1433.5,1028.7L1444.9,1030.9L1445.3,1036.4L1442.6,1045.2ZM1422.1,932.2L1424,945.4L1417.8,940.4L1415.5,933.5L1414.9,926.5ZM1378.3,929L1379.6,938.2L1375.3,934.5L1369.5,921.8L1369.8,913.4L1373.7,917.2ZM1442.3,964.3L1452.8,972.3L1457,971.8L1463.2,976.8L1463.6,978.8L1462.2,982.8L1459.3,986L1451.5,989.4L1446.2,986.7L1443.9,978L1437.7,973.8L1435.8,970.5L1440,965.6ZM1275.4,743.6L1272.1,751.6L1270.5,745.9L1271.8,738.6L1273.1,734.5L1274,734.5L1276,738.7ZM1282.2,775.4L1276.7,775.9L1274,773L1275.4,768.9L1273.7,755.7L1278.3,754.3L1280.6,754.5L1282.2,758.2L1283.2,765.4ZM1209.7,710.2L1199.9,717L1203.1,676.3L1210.3,691.4L1212.3,699.6ZM1246.6,689.7L1242.4,692.6L1238.4,690.3L1233.2,680.7L1235.8,668.6L1237.5,666.7L1239.7,670.6L1243.3,679.2L1245.6,685.6ZM1163.6,632.7L1164.9,637L1160,634.4L1156.1,631.5L1153.8,627.6L1157.7,625.5ZM1175.7,718.5L1160,721.9L1151.9,720.9L1166.9,695.2L1166.6,683.6L1164.3,674.2L1156.4,666.7L1156.1,661.3L1152.5,653.9L1150.9,645.2L1159.4,642.5L1166.2,647.4L1167.2,650.2L1168.5,657.3L1172.1,664.7L1183.9,679.7L1183.9,689.1L1180.6,711.5Z" fill="#5E8C8A" fill-rule="evenodd"/>
+  <path class="map-coast" d="M1517.9,1140L1513.2,1130.5L1507.3,1094.5L1492.3,1065.3L1491,1055.5L1483.8,1043.7L1490.7,1042.9L1476.6,1032.5L1474.7,1028.2L1471.7,1003.9L1472.4,990.4L1470.4,992.2L1468.5,1000.5L1462.9,1004L1465.2,1018.5L1464.9,1022L1461.9,1027.5L1450.2,1021.7L1441.7,1015.4L1431.9,999.9L1422.4,982.5L1425.7,979.8L1429.9,979.5L1443.6,992.4L1452.4,995L1458,991.9L1464.9,986.4L1468.1,975.7L1464.5,971.7L1458,969.5L1453.7,966.6L1447.2,959.5L1446.6,955.6L1444.6,950.9L1438.1,947.6L1432.8,943.4L1437.4,935.9L1441.7,930.2L1430.2,930.5L1417.5,920.8L1414.5,918.1L1410.3,916.1L1400.2,914.9L1391.7,917.7L1395.6,931.5L1394.9,936L1389.4,935.3L1377.6,914.6L1381.2,909.2L1386.1,904.2L1383.8,903.5L1378.9,903.8L1383.5,885.2L1380.6,882.5L1379.3,888.2L1376.6,893.9L1366.8,907L1361.9,904.5L1358.7,901.3L1363.2,894.4L1365.9,892.6L1367.5,888.9L1363.9,881.6L1358,876.3L1353.4,867.4L1351.2,867.2L1353.1,877.8L1352.5,893.1L1342,876.3L1321.1,852.2L1316.2,845.1L1314.6,845.1L1309.3,836.2L1304.4,826.4L1291.7,807.8L1287.8,774.5L1287.4,758.1L1278.9,738.7L1273.1,711.9L1270.8,704.9L1273.7,696.2L1274.4,693L1272.7,693.7L1268.2,698.1L1262.6,687.4L1259,677.8L1244,657.8L1239.7,649L1239.4,640.4L1233.2,649L1224.4,655.1L1215.6,664.3L1209.7,667.1L1191.1,668.8L1180.3,656.5L1164.9,626.5L1162.6,619.7L1164.6,602L1161,585.4L1161,576.5L1160,570.6L1157.4,572L1156.1,575.9L1156.8,582.1L1155.8,587.5L1142.4,586.4L1129.6,584L1140.7,592.8L1152.5,594.8L1158.7,602.7L1159.7,608.9L1159.4,615.8L1153.2,620.7L1147.6,623.6L1148.6,630.3L1155.4,638.4L1147,640.7L1145,646L1144.7,653.4L1148.9,660.1L1150.5,665L1149.6,669.4L1153.5,674.4L1159.4,684.6L1161,691.8L1158.7,702L1155.4,705.9L1150.2,709.8L1137.5,722.6L1131.3,737.2L1126,744L1119.5,745.2L1117.2,742.1L1111.7,738.4L1111.7,731.3L1113.3,725.6L1124.1,711.9L1118.2,713.7L1111.3,717.7L1101.2,725L1097.6,716L1095.7,707.4L1095.7,697.1L1103.8,681.6L1094.3,689.2L1091.7,698.9L1093,710.3L1091.7,718.3L1088.1,728.9L1083.2,735.2L1075.1,739.2L1071.5,745.5L1065.9,750.1L1065.9,740.9L1064.3,728.9L1058.4,700.3L1057.1,706.4L1060,724.1L1060,735.7L1055.5,744.8L1046.6,754.5L1039.8,755.9L1035.9,754.5L1029.7,748.4L1023.1,739.7L1021.8,725.8L1019.2,718.2L1016.9,733.5L1009.7,733.3L1016.3,743.5L1018.2,750.9L1019.2,761.1L1011.4,762.3L1006.1,761.1L1001.6,752.3L999.3,760.4L991.4,767.9L988.5,764.2L986.9,760.3L986.5,753.3L990.8,726.7L990.1,723.8L987.8,721.7L983.6,720.7L982,715.3L975.1,743.6L978,755.2L976.7,760.6L964.3,765L951.6,754.3L949.9,750.9L949,756.9L946.7,764.2L934.9,762.8L928.7,757.2L932.6,747.4L940.1,724.1L941.4,713.6L931.6,705.9L923.1,701.3L918.2,690.6L920.2,702.3L924.8,706.4L931.3,709.3L938.2,715.3L933.3,722.6L928.4,727.2L918.9,744.3L907.8,754L894.4,761.1L851.3,771.8L842.1,776L828.7,789.2L820.2,801.7L818.6,814.4L823.5,828.1L827.4,849.5L830.7,853.9L826.1,861.8L817.9,870L811.4,881.1L812.1,887.4L810.4,891.4L787.5,905.2L782.6,913.1L776.4,921.1L768.9,916.6L764.4,916.6L770.6,922.9L769.6,927.1L767.6,929.5L761.7,931.8L728.7,941.9L703.6,951.4L696.4,950.9L697.7,948.1L702.3,945.6L701.9,934.5L697,932.5L693.1,931.8L673.8,945.1L666.3,958.3L668,960.8L672.2,960.1L685,952.8L691.2,954.8L691.5,957.8L671.9,969.1L630.7,1005.9L628.8,1013.2L623.2,1021.4L616,1029L602.6,1047.7L577.1,1075.4L570.3,1085.7L529.4,1107L521.9,1113.4L505.3,1134.1L499.2,1140L-60,1140L-60,-60L1980,-60L1980,1140ZM1440,1048.3L1438.7,1049.2L1429.2,1041L1421.7,1030.7L1433.5,1028.7L1444.9,1030.9L1445.3,1036.4L1442.6,1045.2ZM1422.1,932.2L1424,945.4L1417.8,940.4L1415.5,933.5L1414.9,926.5ZM1378.3,929L1379.6,938.2L1375.3,934.5L1369.5,921.8L1369.8,913.4L1373.7,917.2ZM1442.3,964.3L1452.8,972.3L1457,971.8L1463.2,976.8L1463.6,978.8L1462.2,982.8L1459.3,986L1451.5,989.4L1446.2,986.7L1443.9,978L1437.7,973.8L1435.8,970.5L1440,965.6ZM1275.4,743.6L1272.1,751.6L1270.5,745.9L1271.8,738.6L1273.1,734.5L1274,734.5L1276,738.7ZM1282.2,775.4L1276.7,775.9L1274,773L1275.4,768.9L1273.7,755.7L1278.3,754.3L1280.6,754.5L1282.2,758.2L1283.2,765.4ZM1209.7,710.2L1199.9,717L1203.1,676.3L1210.3,691.4L1212.3,699.6ZM1246.6,689.7L1242.4,692.6L1238.4,690.3L1233.2,680.7L1235.8,668.6L1237.5,666.7L1239.7,670.6L1243.3,679.2L1245.6,685.6ZM1163.6,632.7L1164.9,637L1160,634.4L1156.1,631.5L1153.8,627.6L1157.7,625.5ZM1175.7,718.5L1160,721.9L1151.9,720.9L1166.9,695.2L1166.6,683.6L1164.3,674.2L1156.4,666.7L1156.1,661.3L1152.5,653.9L1150.9,645.2L1159.4,642.5L1166.2,647.4L1167.2,650.2L1168.5,657.3L1172.1,664.7L1183.9,679.7L1183.9,689.1L1180.6,711.5Z" fill="none" stroke="#2B2622" stroke-width="2.5" opacity="0.8"/>
+  <g class="map-rivers" fill="none" stroke="#4E7F86" stroke-width="5" stroke-linecap="round">
+    <path class="map-river-ganges" d="M243,390.2 Q243,390.2 311.1,395.3 Q379.2,400.3 438.1,385.2 Q497.1,370.1 578.8,369.1 Q660.5,368.1 701.4,379.1 Q742.2,390.2 801.2,397.8 Q860.2,405.3 882.9,415.3 Q905.5,425.3 921.4,440.3 Q937.3,455.3 971.3,487.7 Q1005.4,520.1 1041.7,542.5 Q1078,564.8 1109.8,584.6 Q1141.5,604.4 1150.6,636.4 Q1159.7,668.4 1171.1,697.8 L1182.4,727.3"/>
+    <path class="map-river-hooghly" d="M937.3,455.3 Q937.3,455.3 942.8,483.8 Q948.2,512.2 947.3,531.0 Q946.4,549.9 951.4,569.7 Q956.4,589.5 958.2,614.2 Q960,638.9 958.2,655.1 Q956.4,671.4 946.8,694.5 Q937.3,717.5 932.8,739.5 L928.2,761.5" stroke-width="4"/>
+  </g>
+</svg>
+
+      <div id="s10-reg" class="rlab" style="left:560.3px;top:400.3px">BENGAL &amp; BIHAR</div>
+      <div id="s10-pin-murshidabad" class="pin" style="left:935.2px;top:499.20000000000005px"></div><div id="s10-lab-murshidabad" class="plab" style="left:972.2px;top:460.20000000000005px">Murshidabad</div><div id="s10-pin-plassey" class="pin" style="left:933.4px;top:536.9px"></div><div id="s10-lab-plassey" class="plab" style="left:970.4px;top:543.9px">Plassey 1757</div><div id="s10-pin-calcutta" class="pin" style="left:943.4px;top:658.4px"></div><div id="s10-lab-calcutta" class="plab" style="left:982.4px;top:647.4px">Calcutta</div>
+      </div></div>
+      <div id="s10-year" class="cc-stat" style="left:1330px;top:90px;padding:14px 34px 18px"><div class="cc-big" id="s10-yr" style="font-size:150px">1757</div></div>
+      <div id="s10-diwani" class="cc-stat" style="left:1250px;top:380px;width:600px"><div class="cc-label">1765: THE COMPANY COLLECTS BENGAL'S TAXES</div><div class="cc-sub">The <i>diwani</i>: the right to raise revenue</div></div>
+      <div id="s10-ms" class="cc-mapsimplified">MAP SIMPLIFIED</div></div>
+</div>
+<script>
+/* ClearCut History — character rig motions for GSAP timelines (HyperFrames).
+ * Every motion is added to a paused timeline at an explicit time, with finite repeats,
+ * so any frame is a pure function of timeline time. Randomness is seeded.
+ * Usage: ClearCutRig.idle(tl, rootEl, t0, dur); rootEl = the character's <svg> element.
+ */
+(function () {
+  function rng(seed) {
+    let a = (seed >>> 0) || 1;
+    return function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const part = (root, name) => root && root.querySelector(".rig-" + name);
+  const pv = (el) => (el && el.getAttribute("data-pivot")) || "0 0";
+  function to(tl, el, vars, t) {
+    if (!el) return;
+    vars.svgOrigin = pv(el);
+    tl.to(el, vars, t);
+  }
+  function set(tl, el, vars, t) {
+    if (!el) return;
+    vars.svgOrigin = pv(el);
+    tl.set(el, vars, t);
+  }
+  const R = { rng };
+
+  /* Reset every rig part to rest at time t (call once at the start of a scene). */
+  R.rest = function (tl, root, t) {
+    root.querySelectorAll("[data-pivot]").forEach((el) => set(tl, el, { rotation: 0, scaleX: 1, scaleY: 1, x: 0, y: 0 }, t || 0));
+    ["m1", "m2"].forEach((m) => { const el = root.querySelector(".rig-mouth ." + m); if (el) tl.set(el, { opacity: 0 }, t || 0); });
+    const m0 = root.querySelector(".rig-mouth .m0"); if (m0) tl.set(m0, { opacity: 1 }, t || 0);
+  };
+
+  /* Idle: breathing 1-2% on the torso, head rides along, arms sway a little. */
+  R.idle = function (tl, root, t0, dur, opt) {
+    opt = opt || {};
+    const amp = opt.amp || 0.018, period = opt.period || 3.2;
+    const n = Math.max(1, Math.floor(dur / (period / 2)));
+    const torso = part(root, "torso"), head = part(root, "head");
+    if (torso) tl.fromTo(torso, { scaleY: 1, svgOrigin: pv(torso) }, { scaleY: 1 + amp, svgOrigin: pv(torso), duration: period / 2, ease: "sine.inOut", repeat: n - 1, yoyo: true }, t0);
+    if (head) tl.fromTo(head, { y: 0 }, { y: -amp * 110, duration: period / 2, ease: "sine.inOut", repeat: n - 1, yoyo: true }, t0);
+  };
+
+  /* Blink every 3-5 s. */
+  R.blink = function (tl, root, t0, dur, seed) {
+    const eyes = part(root, "eyes");
+    if (!eyes) return;
+    const r = rng(seed || 7);
+    let t = t0 + 0.5 + r() * 1.2;
+    while (t < t0 + dur - 0.25) {
+      tl.fromTo(eyes, { scaleY: 1, svgOrigin: pv(eyes) }, { scaleY: 0.08, svgOrigin: pv(eyes), duration: 0.06, ease: "none", immediateRender: false }, t);
+      to(tl, eyes, { scaleY: 1, duration: 0.09, ease: "none" }, t + 0.07);
+      t += 3 + r() * 2;
+    }
+  };
+
+  /* Talk: cycle 3 mouth shapes (closed, open, wide) on a seeded pattern. */
+  R.talk = function (tl, root, t0, dur, seed) {
+    const m = [0, 1, 2].map((i) => root.querySelector(".rig-mouth .m" + i));
+    if (!m[0]) return;
+    const r = rng(seed || 11);
+    let t = t0, prev = 0;
+    while (t < t0 + dur) {
+      let k = Math.floor(r() * 3);
+      if (k === prev) k = (k + 1) % 3;
+      m.forEach((el, i) => tl.set(el, { opacity: i === k ? 1 : 0 }, t));
+      prev = k;
+      t += 0.08 + r() * 0.07;
+    }
+    m.forEach((el, i) => tl.set(el, { opacity: i === 0 ? 1 : 0 }, t0 + dur));
+  };
+
+  /* Pose arms: rotations in degrees. side R = viewer's right arm. */
+  R.pose = function (tl, root, t, rot, dur, ease) {
+    Object.keys(rot).forEach((k) => to(tl, part(root, k), { rotation: rot[k], duration: dur || 0.4, ease: ease || "power2.inOut" }, t));
+  };
+  R.armsRest = function (tl, root, t, dur) {
+    R.pose(tl, root, t, { "armL-upper": 0, "armL-lower": 0, "armR-upper": 0, "armR-lower": 0 }, dur || 0.45);
+  };
+
+  /* Point: arm out toward the side, held, then back (hold 0 = keep). */
+  R.point = function (tl, root, t, side, hold) {
+    side = side || "R";
+    const s = side === "R" ? -1 : 1;
+    const p = {};
+    p["arm" + side + "-upper"] = 78 * s;
+    p["arm" + side + "-lower"] = 8 * s;
+    R.pose(tl, root, t, p, 0.35, "back.out(1.6)");
+    if (hold) {
+      const back = {};
+      back["arm" + side + "-upper"] = 0;
+      back["arm" + side + "-lower"] = 0;
+      R.pose(tl, root, t + 0.35 + hold, back, 0.45);
+    }
+  };
+
+  /* Gesture: forearm raised, open-hand beats, then rest. */
+  R.gesture = function (tl, root, t, side, dur) {
+    side = side || "R";
+    dur = dur || 1.6;
+    const s = side === "R" ? -1 : 1;
+    const up = part(root, "arm" + side + "-upper"), lo = part(root, "arm" + side + "-lower");
+    to(tl, up, { rotation: 28 * s, duration: 0.3, ease: "power2.out" }, t);
+    to(tl, lo, { rotation: 70 * s, duration: 0.3, ease: "power2.out" }, t);
+    const beats = Math.max(1, Math.floor((dur - 0.7) / 0.3));
+    for (let i = 0; i < beats; i++) to(tl, lo, { rotation: (i % 2 ? 70 : 52) * s, duration: 0.3, ease: "sine.inOut" }, t + 0.3 + i * 0.3);
+    to(tl, up, { rotation: 0, duration: 0.4, ease: "power2.inOut" }, t + dur - 0.4);
+    to(tl, lo, { rotation: 0, duration: 0.4, ease: "power2.inOut" }, t + dur - 0.4);
+  };
+
+  /* Walk cycle, 4 keys per stride: contact, down, passing, up. */
+  R.walk = function (tl, root, t0, dur, opt) {
+    opt = opt || {};
+    const step = opt.step || 0.45, amp = opt.amp || 22, arm = opt.arm == null ? 14 : opt.arm;
+    const L = part(root, "legL"), Rr = part(root, "legR"), aL = part(root, "armL-upper"), aR = part(root, "armR-upper"), body = part(root, "root");
+    const n = Math.max(1, Math.floor(dur / step));
+    for (let i = 0; i < n; i++) {
+      const t = t0 + i * step, sgn = i % 2 ? 1 : -1;
+      to(tl, L, { rotation: amp * sgn, duration: step, ease: "sine.inOut" }, t);
+      to(tl, Rr, { rotation: -amp * sgn, duration: step, ease: "sine.inOut" }, t);
+      if (arm) {
+        to(tl, aL, { rotation: -arm * sgn, duration: step, ease: "sine.inOut" }, t);
+        to(tl, aR, { rotation: arm * sgn, duration: step, ease: "sine.inOut" }, t);
+      }
+      if (body) {
+        tl.to(body, { y: -7, duration: step / 2, ease: "sine.out" }, t);
+        tl.to(body, { y: 0, duration: step / 2, ease: "sine.in" }, t + step / 2);
+      }
+    }
+    const te = t0 + n * step;
+    [L, Rr].forEach((el) => to(tl, el, { rotation: 0, duration: 0.25 }, te));
+    if (arm) [aL, aR].forEach((el) => to(tl, el, { rotation: 0, duration: 0.25 }, te));
+  };
+
+  /* Turn head: shift the face sideways (dx in SVG units) with a slight tilt. */
+  R.turnHead = function (tl, root, t, dx, dur) {
+    const face = part(root, "face"), head = part(root, "head");
+    if (face) tl.to(face, { x: dx, duration: dur || 0.35, ease: "power2.inOut" }, t);
+    to(tl, head, { rotation: dx * 0.12, duration: dur || 0.35, ease: "power2.inOut" }, t);
+  };
+
+  /* React: eyebrows up, eyes widen, then settle. */
+  R.react = function (tl, root, t, hold) {
+    const brows = part(root, "brows"), eyes = part(root, "eyes");
+    if (brows) tl.to(brows, { y: -8, duration: 0.15, ease: "back.out(3)" }, t);
+    to(tl, eyes, { scaleX: 1.18, scaleY: 1.18, duration: 0.15, ease: "back.out(3)" }, t);
+    if (hold != null) {
+      if (brows) tl.to(brows, { y: 0, duration: 0.3 }, t + 0.15 + hold);
+      to(tl, eyes, { scaleX: 1, scaleY: 1, duration: 0.3 }, t + 0.15 + hold);
+    }
+  };
+  /* Frown: brows down and in (suspicion). */
+  R.frown = function (tl, root, t, hold) {
+    const brows = part(root, "brows");
+    if (!brows) return;
+    tl.to(brows, { y: 5, duration: 0.2, ease: "power2.out" }, t);
+    if (hold != null) tl.to(brows, { y: 0, duration: 0.3 }, t + 0.2 + hold);
+  };
+
+  /* Crowd life for <use> soldiers: seeded bob and sway, finite repeats. */
+  R.crowd = function (tl, uses, t0, dur, opt) {
+    opt = opt || {};
+    const r = rng(opt.seed || 3);
+    const period = opt.period || 0.9, bob = opt.bob == null ? 6 : opt.bob, sway = opt.sway == null ? 2.5 : opt.sway;
+    uses.forEach((u) => {
+      const off = r() * period;
+      const n = Math.max(1, Math.floor((dur - off) / (period / 2)));
+      tl.fromTo(u, { y: 0, rotation: -sway * 0.5, transformOrigin: "50% 100%" }, { y: -bob, rotation: sway * 0.5, transformOrigin: "50% 100%", duration: period / 2, ease: "sine.inOut", repeat: n - 1, yoyo: true }, t0 + off);
+    });
+  };
+
+  window.ClearCutRig = R;
+})();
+
+(function(){
+  const R = window.ClearCutRig;
+  const tl = gsap.timeline({ paused: true });
+  
+      tl.fromTo("#s10-stage",{opacity:0},{opacity:1,duration:0.4,ease:"none"},0);
+      tl.fromTo("#s10-cam",{scale:1.0},{scale:1.14,duration:9.455,ease:"sine.inOut",transformOrigin:"49.3% 50.9%"},0);
+      tl.fromTo("#s10-world",{x:30},{x:-20,duration:9.455,ease:"none"},0);
+      tl.fromTo("#s10-map .map-river-ganges",{attr:{"stroke-dasharray":"2600 2600","stroke-dashoffset":2600}},{attr:{"stroke-dashoffset":0},duration:2.2,ease:"power1.inOut"},0.1);
+      tl.fromTo("#s10-map .map-river-hooghly",{attr:{"stroke-dasharray":"900 900","stroke-dashoffset":900}},{attr:{"stroke-dashoffset":0},duration:1.6,ease:"power1.inOut"},0.5);
+      tl.fromTo("#s10-reg",{opacity:0,scaleX:1.3},{opacity:0.85,scaleX:1,duration:0.8},0.3);
+      tl.fromTo("#s10-pin-murshidabad",{y:-60,opacity:0},{y:0,opacity:1,duration:0.35,ease:"bounce.out"},0.60);tl.fromTo("#s10-lab-murshidabad",{opacity:0,x:-10},{opacity:1,x:0,duration:0.3},0.75);tl.fromTo("#s10-pin-plassey",{y:-60,opacity:0},{y:0,opacity:1,duration:0.35,ease:"bounce.out"},0.95);tl.fromTo("#s10-lab-plassey",{opacity:0,x:-10},{opacity:1,x:0,duration:0.3},1.10);tl.fromTo("#s10-pin-calcutta",{y:-60,opacity:0},{y:0,opacity:1,duration:0.35,ease:"bounce.out"},1.30);tl.fromTo("#s10-lab-calcutta",{opacity:0,x:-10},{opacity:1,x:0,duration:0.3},1.45);
+      tl.fromTo("#s10-pin-plassey",{scale:1},{scale:1.35,duration:0.5,ease:"sine.inOut",yoyo:true,repeat:5},1.7);
+      tl.fromTo("#s10-clipc",{attr:{r:0}},{attr:{r:1500},duration:2.6,ease:"power2.in"},2.68);
+      tl.fromTo("#s10-year",{y:-30,opacity:0},{y:0,opacity:1,duration:0.4},2.48);
+      tl.set("#s10-yr",{textContent:"1758"},5.25);tl.set("#s10-yr",{textContent:"1759"},5.38);tl.set("#s10-yr",{textContent:"1760"},5.51);tl.set("#s10-yr",{textContent:"1761"},5.64);tl.set("#s10-yr",{textContent:"1762"},5.77);tl.set("#s10-yr",{textContent:"1763"},5.90);tl.set("#s10-yr",{textContent:"1764"},6.03);tl.set("#s10-yr",{textContent:"1765"},6.16);
+      tl.fromTo("#s10-year",{scale:1},{scale:1.08,duration:0.2,yoyo:true,repeat:1},6.20);
+      tl.fromTo("#s10-diwani",{y:30,opacity:0},{y:0,opacity:1,duration:0.45,ease:"power3.out"},6.43);
+      tl.fromTo("#s10-ms",{opacity:0},{opacity:1,duration:0.3},0.2);
+    
+  window.__timelines["s10"] = tl;
+})();
+</script>
+</template>

@@ -1,0 +1,70 @@
+/* ClearCut History — on-screen text kit (1920x1080). Minimum text size 36px.
+   Positions are defaults; scenes may override left/top. No CSS transforms here:
+   GSAP owns transforms on these elements. */
+@font-face { font-family: "Bebas Neue"; src: url("assets/fonts/BebasNeue-400.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "CC Inter"; src: url("assets/fonts/inter-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "CC Inter"; src: url("assets/fonts/inter-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "CC Inter"; src: url("assets/fonts/inter-latin-900-normal.woff2") format("woff2"); font-weight: 900; }
+@font-face { font-family: "CC Garamond"; src: url("assets/fonts/eb-garamond-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "CC Garamond"; src: url("assets/fonts/eb-garamond-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "CC Garamond"; src: url("assets/fonts/eb-garamond-latin-400-italic.woff2") format("woff2"); font-style: italic; }
+
+#root { --paper:#E9DCC0; --ink:#2B2622; --red:#B8362E; --green:#4F7A3A; --saffron:#D9822B; --teal:#3F7F7A; --gold:#C9A24A; }
+
+/* Label chip, top left: PLACE, REGION · DD MONTH YYYY. Wipes in with clip-path. */
+.cc-chip { position:absolute; left:96px; top:76px; display:flex; align-items:center; gap:16px;
+  padding:14px 28px 10px 20px; background:var(--ink); color:var(--paper);
+  font:400 46px/1 "Bebas Neue", sans-serif; letter-spacing:2.5px; white-space:nowrap; }
+.cc-chip .cc-dot { width:16px; height:16px; background:var(--red); border-radius:2px; flex:none; }
+
+/* Name card, bottom left, first appearance of a person. */
+.cc-namecard { position:absolute; left:96px; bottom:104px; display:flex; align-items:stretch;
+  background:var(--paper); border:3px solid var(--ink); box-shadow:10px 10px 0 rgba(43,38,34,.28); }
+.cc-namecard .cc-year { background:var(--red); color:var(--paper); font:400 44px/1 "Bebas Neue", sans-serif;
+  letter-spacing:2px; padding:0 20px; display:flex; align-items:center; }
+.cc-namecard .cc-who { padding:14px 28px 14px 24px; }
+.cc-namecard .cc-name { font:400 70px/0.95 "Bebas Neue", sans-serif; letter-spacing:2px; color:var(--ink); white-space:nowrap; }
+.cc-namecard .cc-role { font:400 36px/1.15 "CC Inter", sans-serif; color:var(--ink); margin-top:4px; white-space:nowrap; }
+
+/* Stamp: rotated about -6deg (set by GSAP), drops with a thud. */
+.cc-stamp { position:absolute; padding:10px 36px 0; border:9px solid var(--red); outline:3px solid var(--red); outline-offset:6px;
+  color:var(--red); font:400 168px/1 "Bebas Neue", sans-serif; letter-spacing:10px; white-space:nowrap;
+  background:rgba(233,220,192,.55); mix-blend-mode:multiply; }
+
+/* Trust tags. */
+.cc-trust { position:absolute; display:inline-flex; align-items:center; gap:12px; padding:10px 20px 8px;
+  background:var(--saffron); color:var(--ink); border:3px solid var(--ink);
+  font:700 36px/1 "CC Inter", sans-serif; letter-spacing:1px; white-space:nowrap; }
+.cc-trust::before { content:""; width:14px; height:14px; border-radius:50%; background:var(--ink); }
+.cc-mapsimplified { position:absolute; right:72px; bottom:56px; padding:8px 16px 6px; background:rgba(43,38,34,.82);
+  color:var(--paper); font:400 38px/1 "Bebas Neue", sans-serif; letter-spacing:3px; }
+
+/* Versus card. */
+.cc-versus { position:absolute; display:flex; border:4px solid var(--ink); box-shadow:12px 12px 0 rgba(43,38,34,.3); }
+.cc-versus > div { padding:18px 40px 14px; text-align:center; }
+.cc-versus .cc-a { background:#9A2A23; color:#FFF8EC; }
+.cc-versus .cc-b { background:#3B5E2C; color:#FFF8EC; }
+.cc-versus .cc-side { font:400 48px/1 "Bebas Neue", sans-serif; letter-spacing:4px; }
+.cc-versus .cc-num { font:400 132px/0.95 "Bebas Neue", sans-serif; letter-spacing:2px; }
+.cc-versus .cc-bar { width:6px; background:var(--ink); padding:0; }
+
+/* Big number / stat card. */
+.cc-stat { position:absolute; background:var(--paper); border:4px solid var(--ink); padding:22px 40px 26px; box-shadow:12px 12px 0 rgba(43,38,34,.3); }
+.cc-stat .cc-label { font:400 50px/1 "Bebas Neue", sans-serif; letter-spacing:3px; color:var(--ink); }
+.cc-stat .cc-big { font:400 210px/0.9 "Bebas Neue", sans-serif; color:var(--red); }
+.cc-stat .cc-sub { font:400 38px/1.2 "CC Inter", sans-serif; color:var(--ink); }
+
+/* Title card and end card. */
+.cc-title { position:absolute; font:700 120px/1 "CC Garamond", serif; color:var(--ink); text-align:center; }
+.cc-kicker { position:absolute; font:400 52px/1 "Bebas Neue", sans-serif; letter-spacing:8px; color:var(--red); text-align:center; }
+.cc-endcard { position:absolute; inset:0; background:var(--ink); color:var(--paper); }
+.cc-endcard .cc-q { position:absolute; left:0; right:0; top:300px; text-align:center; font:700 96px/1.05 "CC Garamond", serif; }
+.cc-endcard .cc-brand { position:absolute; left:0; right:0; bottom:150px; text-align:center; font:400 64px/1 "Bebas Neue", sans-serif; letter-spacing:14px; color:var(--gold); }
+.cc-endcard .cc-cta { position:absolute; left:0; right:0; bottom:240px; text-align:center; font:400 40px/1 "CC Inter", sans-serif; }
+
+/* Grade layers (driven by the timeline, never CSS animation). */
+.cc-grade-tint { position:absolute; inset:0; background:rgba(214,160,90,.10); mix-blend-mode:multiply; }
+.cc-grade-vignette { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 55%, rgba(43,38,34,.55) 100%); }
+.cc-grade-grain { position:absolute; left:-256px; top:-256px; width:2432px; height:1592px;
+  background-image:url("assets/ui/grain.png"); background-size:512px 512px; opacity:.11; mix-blend-mode:overlay; }
+.cc-grade-paper { position:absolute; inset:0; background-image:url("assets/ui/paper.png"); background-size:1024px 1024px; opacity:.22; mix-blend-mode:multiply; }

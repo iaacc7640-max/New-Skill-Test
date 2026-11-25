@@ -1,0 +1,57 @@
+{
+ "width": 1920,
+ "height": 1080,
+ "projection": {
+  "type": "mercator",
+  "center": [
+   88.4,
+   23.9
+  ],
+  "scale": 5200
+ },
+ "regionLabel": [
+  760.3,
+  430.3
+ ],
+ "seaLabel": [
+  1014.5,
+  824.8
+ ],
+ "cities": {
+  "plassey": {
+   "name": "Plassey",
+   "lon": 88.25,
+   "lat": 23.8,
+   "x": 946.4,
+   "y": 549.9
+  },
+  "murshidabad": {
+   "name": "Murshidabad",
+   "lon": 88.27,
+   "lat": 24.18,
+   "x": 948.2,
+   "y": 512.2
+  },
+  "calcutta": {
+   "name": "Calcutta",
+   "lon": 88.36,
+   "lat": 22.57,
+   "x": 956.4,
+   "y": 671.4
+  },
+  "patna": {
+   "name": "Patna",
+   "lon": 85.14,
+   "lat": 25.59,
+   "x": 664.1,
+   "y": 371.1
+  },
+  "dhaka": {
+   "name": "Dhaka",
+   "lon": 90.41,
+   "lat": 23.81,
+   "x": 1142.4,
+   "y": 548.9
+  }
+ }
+}
