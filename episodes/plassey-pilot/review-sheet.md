@@ -8,7 +8,7 @@
 
 | # | Check | Result | Evidence |
 |---|---|---|---|
-| 1 | Something moves in every 2-second window, and grain moves (two frames 1/15 s apart differ) | **PASS** | `qc.py` on the master: 48 of 48 two-second windows show motion with the grain blurred out (smallest change 0.44 on a 0–255 scale, on the end card). Grain: frames 1/15 s apart differ by 4.0–7.0 at 0:02, 0:33, 1:03, 1:30. Grain is jittered by timeline `set` calls at 15 fps, not CSS animation. |
+| 1 | Something moves in every 2-second window, and grain moves (two frames 1/15 s apart differ) | **PASS** | `qc.py` on the master: 48 of 48 two-second windows show motion with the grain blurred out (smallest change 0.47 on a 0–255 scale, on the end card). Grain: frames 1/15 s apart differ by 2.7–5.9 at 0:02, 0:33, 1:03, 1:30. Grain is jittered by timeline `set` calls at 15 fps, not CSS animation. |
 | 2 | A new visual at least every 10 s; at least 3 rigged characters animated | **PASS** | 12 shots of 6.0–11.0 s. The one shot over 10 s (cold open, 11.0 s) adds the chip at 0.7 s and the versus card at 6.4 s. Five rigged characters animate: Clive, Siraj ud-Daulah, Mir Jafar, Company soldier, Nawab's soldier. |
 | 3 | Every person named on screen gets a name card the first time | **PASS** | Siraj (0:18, card "1756 · SIRAJ UD-DAULAH"), Mir Jafar (0:26), Robert Clive (0:32): each on their first appearance. |
 | 4 | Dates, names and numbers on screen match `script.md` and `sources.md` | **PASS** | Every on-screen figure (23 June 1757, ~3,000, ~50,000, 1756, 23, June 1757, 8 AM, 22, 27, 1757→1765) is listed in `script.md` and traced in `sources.md`. |
